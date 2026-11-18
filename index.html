@@ -45,6 +45,13 @@
       <span class="hint" id="ganttTopHint">Type the time each block ends at &mdash; one block per stretch of CPU time, including <b>IDLE</b> gaps.</span>
     </div>
     <div id="solGantt" class="sol-gantt" hidden></div>
+    <div class="rq-panel" id="rqPanel" hidden>
+      <div class="rq-head">
+        <div class="mini-label">Ready queue <span class="rq-q" id="rqQ"></span></div>
+        <span class="hint">live as you type &middot; front of the queue is outlined</span>
+      </div>
+      <div class="rq-strip" id="rqStrip"></div>
+    </div>
     <div class="gantt-holder">
       <div class="mini-label">Your chart</div>
       <div id="ganttPreview"></div>
@@ -320,6 +327,77 @@
 
     return { segments: segs, metrics: metrics, end: t };
   }
+
+  // Replays the student's own Gantt blocks as Round Robin turns so the ready
+  // queue can be shown next to their work. Never used for grading.
+  function rrTrace(procs, q, blocks) {
+    var rem = new Map(procs.map(function (p) { return [p.pid, p.bt]; }));
+    var admitted = {};
+    var queue = [];
+    var frames = [];
+    var pending = [];
+    var t = 0;
+
+    function admitUntil(time) {
+      var fresh = procs.filter(function (p) { return !admitted[p.pid] && p.at <= time; });
+      fresh.sort(function (a, b) { return a.at - b.at || a.id - b.id; });
+      fresh.forEach(function (p) { admitted[p.pid] = true; queue.push(p.pid); });
+      return fresh;
+    }
+
+    function frame(block, running, arrivals, warn) {
+      frames.push({
+        start: block ? block.start : t,
+        end: block ? block.end : null,
+        running: running,
+        queue: queue.map(function (pid) { return { pid: pid, rem: rem.get(pid) }; }),
+        arrivals: arrivals.map(function (p) { return { pid: p.pid, at: p.at }; }),
+        warn: warn || ''
+      });
+    }
+
+    frame(null, null, admitUntil(0), '');
+
+    blocks.forEach(function (b) {
+      var warn = [];
+      var arrivals = pending.concat(admitUntil(b.start));
+      pending = [];
+      var pid = b.pid;
+      var dur = b.end - b.start;
+
+      if (pid === 'IDLE') {
+        if (queue.length) warn.push('IDLE while processes are ready');
+        frame(b, 'IDLE', arrivals, warn.join(' \u00b7 '));
+        pending = admitUntil(b.end);
+        t = b.end;
+        return;
+      }
+
+      if (!admitted[pid]) {
+        warn.push(pid + ' has not arrived yet');
+      } else {
+        var qi = queue.indexOf(pid);
+        if (qi === -1) warn.push(pid + ' has already finished');
+        else {
+          if (qi > 0) warn.push(pid + ' was not at the front');
+          queue.splice(qi, 1);
+        }
+      }
+
+      if (dur > q) warn.push('a turn cannot exceed q = ' + q + ' ms');
+
+      frame(b, pid, arrivals, warn.join(' \u00b7 '));
+
+      rem.set(pid, Math.max(0, rem.get(pid) - dur));
+      pending = admitUntil(b.end);
+      t = b.end;
+      if (rem.get(pid) > 0) queue.push(pid);
+    });
+
+    if (blocks.length) frame(null, null, pending.concat(admitUntil(t)), '');
+
+    return frames;
+  }
   /* PURE-END */
   var state = {
     algo: 'fcfs',
@@ -463,18 +541,26 @@
   }
 
   // Blocks the user actually filled in, mapped to timed segments.
-  function timeline() {
+  function rawBlocks() {
     var st = starts();
     var out = [];
     state.gantt.forEach(function (b, i) {
       if (!b.pid || !st[i].valid) return;
-      var seg = { pid: b.pid, start: st[i].s, end: st[i].e, d: st[i].d };
+      out.push({ pid: b.pid, start: st[i].s, end: st[i].e, d: st[i].d });
+    });
+    return out;
+  }
+
+  // Same blocks, with adjacent stretches of one process folded together.
+  function timeline() {
+    var out = [];
+    rawBlocks().forEach(function (seg) {
       var last = out[out.length - 1];
       if (last && last.pid === seg.pid && last.end === seg.start) {
         last.end = seg.end;
         last.d += seg.d;
       } else {
-        out.push(seg);
+        out.push({ pid: seg.pid, start: seg.start, end: seg.end, d: seg.d });
       }
     });
     return out;
@@ -508,6 +594,71 @@
 
   function renderPreview() {
     el.ganttPreview.innerHTML = stripHTML(timeline());
+    renderQueue();
+  }
+
+  /* ---------------- ready queue (round robin) ---------------- */
+
+  function chipHTML(pid, rem, front) {
+    return '<span class="rq-chip' + (front ? ' front' : '') + '"' +
+      ' style="background:' + colorFor(pid) + '"' +
+      ' title="' + esc(pid) + (rem == null ? '' : ' \u00b7 ' + rem + ' ms left') +
+      (front ? ' \u00b7 front of the queue' : '') + '">' +
+      esc(pid) + (rem == null ? '' : '<i>' + rem + '</i>') + '</span>';
+  }
+
+  function frameHTML(f, i, total) {
+    var isNow = i === total - 1;
+    var time = f.end == null
+      ? 't = ' + f.start
+      : f.start + '\u2013' + f.end + ' ms';
+
+    var cpu;
+    if (f.running === 'IDLE') cpu = '<span class="rq-chip idle">IDLE</span>';
+    else if (f.running) cpu = '<span class="rq-chip" style="background:' + colorFor(f.running) + '">' +
+      '<b class="rq-play">\u25b6</b>' + esc(f.running) + '</span>';
+    else cpu = '<span class="rq-empty">\u2014</span>';
+
+    var queue = f.queue.length
+      ? f.queue.map(function (it, k) { return chipHTML(it.pid, it.rem, k === 0); }).join('')
+      : '<span class="rq-empty">empty</span>';
+
+    var arrivals = f.arrivals.length
+      ? '<div class="rq-arr">\u2193 ' + f.arrivals.map(function (a) {
+          return esc(a.pid) + (a.at === f.start ? '' : ' @' + a.at);
+        }).join(', ') + '</div>'
+      : '';
+
+    return '<div class="rq-frame' + (isNow ? ' now' : '') + '">' +
+      '<div class="rq-time"><span>' + time + '</span>' +
+        (isNow ? '<span class="rq-now">now</span>' : '') + '</div>' +
+      '<div class="rq-row"><span class="rq-lbl">cpu</span><div class="rq-chips">' + cpu + '</div></div>' +
+      '<div class="rq-row"><span class="rq-lbl">queue</span><div class="rq-chips">' + queue + '</div></div>' +
+      arrivals +
+      (f.warn ? '<div class="rq-warn">' + esc(f.warn) + '</div>' : '') +
+      '</div>';
+  }
+
+  function renderQueue() {
+    if (!el.rqPanel) return;
+    if (state.algo !== 'rr') {
+      el.rqPanel.hidden = true;
+      el.rqStrip.innerHTML = '';
+      return;
+    }
+
+    var strip = el.rqStrip;
+    var follow = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 24;
+
+    el.rqPanel.hidden = false;
+    el.rqQ.textContent = 'q = ' + state.q + ' ms';
+
+    var frames = rrTrace(state.procs, state.q, rawBlocks());
+    strip.innerHTML = frames.map(function (f, i) {
+      return frameHTML(f, i, frames.length);
+    }).join('');
+
+    if (follow) strip.scrollLeft = strip.scrollWidth;
   }
 
   function cardEl(i) {
@@ -836,6 +987,9 @@
       answerTable: $('answerTable'),
       ganttEditor: $('ganttEditor'),
       ganttPreview: $('ganttPreview'),
+      rqPanel: $('rqPanel'),
+      rqStrip: $('rqStrip'),
+      rqQ: $('rqQ'),
       ganttHint: $('ganttHint'),
       solGantt: $('solGantt'),
       addBtn: $('addBtn'),
