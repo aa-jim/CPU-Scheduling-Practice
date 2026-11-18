@@ -200,8 +200,8 @@
     if (algoKey === 'rr') return simulateRR(procs, quantum);
 
     var A = ALGOS[algoKey];
-    var cmp = comparator(algoKey, new Map(procs.map(function (p) { return [p.pid, p.bt]; })));
     var rem = new Map(procs.map(function (p) { return [p.pid, p.bt]; }));
+    var cmp = comparator(algoKey, rem);
     var first = new Map();
     var done = new Map();
     var segs = [];
