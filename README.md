@@ -16,11 +16,10 @@ build the Gantt chart, fill in the metrics table, and get graded instantly.
 - **Gantt chart editor** — one card per stretch of CPU time: pick the process (or
   `IDLE`) and type the time that block ends at. Bars scale to the real durations and
   tick labels are drawn under the preview.
-- **Live ready queue for Round Robin** — a filmstrip above the Gantt preview replays
-  your own blocks: each frame shows the process on the CPU, the FIFO queue in order
-  (front outlined) with remaining bursts, and who just arrived. It updates as you
-  type and flags choices that break the queue (wrong process, `IDLE` with a ready
-  process, a turn longer than the quantum).
+- **Live ready queue for Round Robin** — a slim row above the Gantt bar shows the
+  queue after every block you enter, aligned one-to-one with the block it belongs to.
+  Processes that just joined are marked `+`, and hovering a segment reveals the full
+  queue when a short block has no room for it.
 - **Instant grading** — wrong Gantt blocks are outlined in red, wrong table cells
   turn red, correct ones turn green, and a score pill shows the percentage.
 - **Show answer** reveals the correct Gantt chart and fills in the missing values.
