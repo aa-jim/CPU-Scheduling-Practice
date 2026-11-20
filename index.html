@@ -1,1104 +1,1493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CPU Scheduling Practice</title>
-<link rel="stylesheet" href="style.css" />
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <nav class="nav" aria-label="Practice pages">
-      <a href="index.html" class="on" aria-current="page">CPU Scheduling</a>
-      <a href="bankers.html">Banker&rsquo;s Algorithm</a>
-    </nav>
-    <h1>CPU Scheduling Practice</h1>
-    <p>Pick an algorithm, complete the Gantt chart, then fill in the table. All times are in ms.</p>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CPU Scheduling Practice</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <nav class="nav" aria-label="Practice pages">
+          <a href="index.html" class="on" aria-current="page">CPU Scheduling</a>
+          <a href="bankers.html">Banker&rsquo;s Algorithm</a>
+          <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+          <a href="paging.html">Page Replacement</a>
+        </nav>
+        <h1>CPU Scheduling Practice</h1>
+        <p>
+          Pick an algorithm, complete the Gantt chart, then fill in the table.
+          All times are in ms.
+        </p>
+      </header>
 
-  <section class="panel controls">
-    <div class="group">
-      <div class="glabel">Algorithm</div>
-      <div class="chips" id="algoChips"></div>
-    </div>
-    <div class="group">
-      <div class="glabel">Processes</div>
-      <div class="chips" id="nChips"></div>
-    </div>
-    <div class="group">
-      <div class="glabel">Arrival times</div>
-      <div class="chips" id="arrChips"></div>
-    </div>
-    <div class="group">
-      <button class="btn" id="newBtn">&#8635; New problem</button>
-    </div>
-  </section>
+      <section class="panel controls">
+        <div class="group">
+          <div class="glabel">Algorithm</div>
+          <div class="chips" id="algoChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Processes</div>
+          <div class="chips" id="nChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Arrival times</div>
+          <div class="chips" id="arrChips"></div>
+        </div>
+        <div class="group">
+          <button class="btn" id="newBtn">&#8635; New problem</button>
+        </div>
+      </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Given data</h2>
-      <span class="note" id="ruleNote"></span>
-    </div>
-    <div class="table-wrap"><table class="given" id="givenTable"></table></div>
-  </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Given data</h2>
+          <span class="note" id="ruleNote"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="given" id="givenTable"></table>
+        </div>
+      </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2><span class="step">Step 1</span> Gantt chart</h2>
-      <span class="hint" id="ganttTopHint">Type the time each block ends at &mdash; one block per stretch of CPU time, including <b>IDLE</b> gaps.</span>
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 1</span> Gantt chart</h2>
+          <span class="hint" id="ganttTopHint"
+            >Type the time each block ends at &mdash; one block per stretch of
+            CPU time, including <b>IDLE</b> gaps.</span
+          >
+        </div>
+        <div id="solGantt" class="sol-gantt" hidden></div>
+        <div class="rq-panel" id="rqPanel" hidden>
+          <div class="rq-head">
+            <div class="mini-label">
+              Ready queue <span class="rq-q" id="rqQ"></span>
+            </div>
+            <span class="hint"
+              >live as you type &middot; front of the queue is outlined</span
+            >
+          </div>
+          <div class="rq-strip" id="rqStrip"></div>
+        </div>
+        <div class="gantt-holder">
+          <div class="mini-label">Your chart</div>
+          <div id="ganttPreview"></div>
+        </div>
+        <div class="gtrack-edit" id="ganttEditor"></div>
+        <div
+          style="
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+          "
+        >
+          <button class="btn ghost" id="addBtn">+ Add block</button>
+          <span class="hint" id="ganttHint"></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 2</span> Answer table</h2>
+          <span class="hint" id="formulaHint"
+            >TAT = CT &minus; AT &nbsp;&middot;&nbsp; WT = TAT &minus; BT
+            &nbsp;&middot;&nbsp; RT = first CPU time &minus; AT</span
+          >
+        </div>
+        <div class="table-wrap"><table id="answerTable"></table></div>
+      </section>
     </div>
-    <div id="solGantt" class="sol-gantt" hidden></div>
-    <div class="rq-panel" id="rqPanel" hidden>
-      <div class="rq-head">
-        <div class="mini-label">Ready queue <span class="rq-q" id="rqQ"></span></div>
-        <span class="hint">live as you type &middot; front of the queue is outlined</span>
+
+    <footer class="actions">
+      <div class="actions-inner">
+        <div class="score" id="score" aria-live="polite"></div>
+        <div class="btns">
+          <button class="btn primary" id="submitBtn">Submit</button>
+          <button class="btn" id="retryBtn">Try again</button>
+          <button class="btn" id="revealBtn">Show answer</button>
+        </div>
       </div>
-      <div class="rq-strip" id="rqStrip"></div>
-    </div>
-    <div class="gantt-holder">
-      <div class="mini-label">Your chart</div>
-      <div id="ganttPreview"></div>
-    </div>
-    <div class="gtrack-edit" id="ganttEditor"></div>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn ghost" id="addBtn">+ Add block</button>
-      <span class="hint" id="ganttHint"></span>
-    </div>
-  </section>
+    </footer>
+    <script>
+      (function () {
+        "use strict";
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2><span class="step">Step 2</span> Answer table</h2>
-      <span class="hint" id="formulaHint">TAT = CT &minus; AT &nbsp;&middot;&nbsp; WT = TAT &minus; BT &nbsp;&middot;&nbsp; RT = first CPU time &minus; AT</span>
-    </div>
-    <div class="table-wrap"><table id="answerTable"></table></div>
-  </section>
-</div>
+        /* PURE-START */
+        var ALGOS = {
+          fcfs: { label: "FCFS", pre: false, prio: false },
+          sjf: { label: "SJF", pre: false, prio: false },
+          srtf: { label: "SRTF", pre: true, prio: false },
+          pnp: {
+            label: "Priority \u00b7 non-preemptive",
+            pre: false,
+            prio: true,
+          },
+          pp: { label: "Priority \u00b7 preemptive", pre: true, prio: true },
+          rr: { label: "Round Robin", pre: true, prio: false, rr: true },
+        };
 
-<footer class="actions">
-  <div class="actions-inner">
-    <div class="score" id="score" aria-live="polite"></div>
-    <div class="btns">
-      <button class="btn primary" id="submitBtn">Submit</button>
-      <button class="btn" id="retryBtn">Try again</button>
-      <button class="btn" id="revealBtn">Show answer</button>
-    </div>
-  </div>
-</footer>
-<script>
-(function () {
-  'use strict';
+        var RULES = {
+          fcfs: "Runs in arrival order. <b>Non-preemptive</b>: once a process starts, it runs to completion.",
+          sjf: "Among the processes that have already arrived, the shortest burst runs next. <b>Non-preemptive</b>.",
+          srtf: "<b>Preemptive SJF</b>: a newly arrived process with a shorter remaining time takes the CPU immediately.",
+          pnp: "Among arrived processes the highest priority (lowest number) runs to completion. <b>Non-preemptive</b>.",
+          pp: "<b>Preemptive</b>: a newly arrived process with higher priority (lower number) takes the CPU immediately.",
+          rr:
+            "<b>Round Robin</b>: each process runs for at most one quantum per turn, then goes to the back of the FIFO ready queue. " +
+            "Arrivals join the queue before a preempted process; simultaneous arrivals queue in process-number order.",
+        };
 
-  /* PURE-START */
-  var ALGOS = {
-    fcfs: { label: 'FCFS', pre: false, prio: false },
-    sjf:  { label: 'SJF', pre: false, prio: false },
-    srtf: { label: 'SRTF', pre: true, prio: false },
-    pnp:  { label: 'Priority \u00b7 non-preemptive', pre: false, prio: true },
-    pp:   { label: 'Priority \u00b7 preemptive', pre: true, prio: true },
-    rr:   { label: 'Round Robin', pre: true, prio: false, rr: true }
-  };
+        var FIELDS = ["ct", "tat", "wt", "rt"];
+        var FIELD_LABEL = {
+          ct: "Completion",
+          tat: "Turnaround",
+          wt: "Waiting",
+          rt: "Response",
+        };
+        var PALETTE = [
+          "#6366f1",
+          "#db2777",
+          "#0d9488",
+          "#d97706",
+          "#7c3aed",
+          "#0284c7",
+          "#dc2626",
+        ];
 
-  var RULES = {
-    fcfs: 'Runs in arrival order. <b>Non-preemptive</b>: once a process starts, it runs to completion.',
-    sjf:  'Among the processes that have already arrived, the shortest burst runs next. <b>Non-preemptive</b>.',
-    srtf: '<b>Preemptive SJF</b>: a newly arrived process with a shorter remaining time takes the CPU immediately.',
-    pnp:  'Among arrived processes the highest priority (lowest number) runs to completion. <b>Non-preemptive</b>.',
-    pp:   '<b>Preemptive</b>: a newly arrived process with higher priority (lower number) takes the CPU immediately.',
-    rr:   '<b>Round Robin</b>: each process runs for at most one quantum per turn, then goes to the back of the FIFO ready queue. ' +
-          'Arrivals join the queue before a preempted process; simultaneous arrivals queue in process-number order.'
-  };
-
-  var FIELDS = ['ct', 'tat', 'wt', 'rt'];
-  var FIELD_LABEL = { ct: 'Completion', tat: 'Turnaround', wt: 'Waiting', rt: 'Response' };
-  var PALETTE = ['#6366f1', '#db2777', '#0d9488', '#d97706', '#7c3aed', '#0284c7', '#dc2626'];
-
-  function randInt(min, max) {
-    return min + Math.floor(Math.random() * (max - min + 1));
-  }
-
-  function shuffle(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = randInt(0, i);
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
-
-  function generateProcs(n, withArrivals) {
-    var arrivals = null;
-    var draw;
-
-    // Exactly one process at t = 0, and no arrival time shared by more than two.
-    if (withArrivals) {
-      for (var attempt = 0; attempt < 200 && !arrivals; attempt++) {
-        draw = [];
-        for (var i = 0; i < n; i++) draw.push(randInt(0, 15));
-        if (validArrivals(draw)) arrivals = draw;
-      }
-
-      if (!arrivals) {
-        // deterministic fallback: one 0, then every other value at most twice
-        var pool = [0];
-        for (var v = 1; v <= 15; v++) { pool.push(v); pool.push(v); }
-        arrivals = shuffle(pool).slice(0, n);
-        if (arrivals.indexOf(0) === -1) arrivals[0] = 0;
-      }
-    }
-
-    var bursts = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).slice(0, n);
-    var prios;
-    do {
-      prios = [];
-      for (var k = 0; k < n; k++) prios.push(randInt(1, 5));
-    } while (uniq(prios).length < 2);
-
-    var procs = [];
-    for (var p = 0; p < n; p++) {
-      procs.push({
-        pid: 'P' + (p + 1),
-        id: p + 1,
-        at: withArrivals ? arrivals[p] : 0,
-        bt: bursts[p],
-        prio: prios[p]
-      });
-    }
-    return procs;
-  }
-
-  function validArrivals(list) {
-    var count = {};
-    for (var i = 0; i < list.length; i++) {
-      var v = list[i];
-      count[v] = (count[v] || 0) + 1;
-      if (count[v] > 2) return false;
-    }
-    return count[0] === 1;
-  }
-
-  function uniq(arr) {
-    var seen = {}, out = [];
-    for (var i = 0; i < arr.length; i++) {
-      if (!seen[arr[i]]) { seen[arr[i]] = 1; out.push(arr[i]); }
-    }
-    return out;
-  }
-
-  function comparator(algoKey, rem) {
-    if (!ALGOS[algoKey].pre) {
-      if (algoKey === 'fcfs') return function (a, b) { return a.at - b.at || a.id - b.id; };
-      if (algoKey === 'sjf')  return function (a, b) { return a.bt - b.bt || a.at - b.at || a.id - b.id; };
-      return function (a, b) { return a.prio - b.prio || a.at - b.at || a.id - b.id; };
-    }
-    if (algoKey === 'srtf') {
-      return function (a, b) {
-        return (rem.get(a.pid) - rem.get(b.pid)) || a.at - b.at || a.id - b.id;
-      };
-    }
-    return function (a, b) { return a.prio - b.prio || a.at - b.at || a.id - b.id; };
-  }
-
-  function simulate(procs, algoKey, quantum) {
-    if (algoKey === 'rr') return simulateRR(procs, quantum);
-
-    var A = ALGOS[algoKey];
-    var rem = new Map(procs.map(function (p) { return [p.pid, p.bt]; }));
-    var cmp = comparator(algoKey, rem);
-    var first = new Map();
-    var done = new Map();
-    var segs = [];
-    var t = 0;
-    var guard = 0;
-
-    function pushSeg(pid, s, e) {
-      if (e <= s) return;
-      var last = segs[segs.length - 1];
-      if (last && last.pid === pid && last.end === s) last.end = e;
-      else segs.push({ pid: pid, start: s, end: e });
-    }
-
-    while (guard++ < 5000) {
-      var pending = procs.filter(function (p) { return rem.get(p.pid) > 0; });
-      if (!pending.length) break;
-
-      var ready = pending.filter(function (p) { return p.at <= t; });
-      if (!ready.length) {
-        var nextAt = Math.min.apply(null, pending.map(function (p) { return p.at; }));
-        pushSeg('IDLE', t, nextAt);
-        t = nextAt;
-        continue;
-      }
-
-      var best = ready.slice().sort(cmp)[0];
-
-      if (A.pre) {
-        var upcoming = pending.filter(function (p) { return p.at > t; }).map(function (p) { return p.at; });
-        var limit = upcoming.length ? Math.min.apply(null, upcoming) : Infinity;
-        var end = Math.min(t + rem.get(best.pid), limit);
-        if (!first.has(best.pid)) first.set(best.pid, t);
-        pushSeg(best.pid, t, end);
-        rem.set(best.pid, rem.get(best.pid) - (end - t));
-        t = end;
-        if (rem.get(best.pid) === 0) done.set(best.pid, t);
-      } else {
-        var s = t, e = t + rem.get(best.pid);
-        first.set(best.pid, s);
-        pushSeg(best.pid, s, e);
-        rem.set(best.pid, 0);
-        done.set(best.pid, e);
-        t = e;
-      }
-    }
-
-    var metrics = {};
-    procs.forEach(function (p) {
-      var ct = done.get(p.pid);
-      metrics[p.pid] = {
-        ct: ct,
-        tat: ct - p.at,
-        wt: ct - p.at - p.bt,
-        rt: first.get(p.pid) - p.at
-      };
-    });
-
-    return { segments: segs, metrics: metrics, end: t };
-  }
-
-  // Round Robin: FIFO ready queue, at most `q` ms per turn.
-  function simulateRR(procs, q) {
-    var rem = new Map(procs.map(function (p) { return [p.pid, p.bt]; }));
-    var first = new Map();
-    var done = new Map();
-    var segs = [];
-    var queue = [];
-    var admitted = {};
-    var t = 0;
-    var guard = 0;
-
-    function pushSeg(pid, s, e) {
-      if (e <= s) return;
-      var last = segs[segs.length - 1];
-      if (last && last.pid === pid && last.end === s) last.end = e;
-      else segs.push({ pid: pid, start: s, end: e });
-    }
-
-    // Everyone whose arrival has come joins the queue in (arrival, pid) order.
-    function admit() {
-      var fresh = procs.filter(function (p) { return !admitted[p.pid] && p.at <= t; });
-      fresh.sort(function (a, b) { return a.at - b.at || a.id - b.id; });
-      fresh.forEach(function (p) { admitted[p.pid] = true; queue.push(p.pid); });
-    }
-
-    while (guard++ < 20000) {
-      var pending = procs.filter(function (p) { return rem.get(p.pid) > 0; });
-      if (!pending.length) break;
-
-      admit();
-
-      if (!queue.length) {
-        var nextAt = Math.min.apply(null, pending.map(function (p) { return p.at; }));
-        pushSeg('IDLE', t, nextAt);
-        t = nextAt;
-        continue;
-      }
-
-      var pid = queue.shift();
-      var run = Math.min(rem.get(pid), q);
-      if (!first.has(pid)) first.set(pid, t);
-      pushSeg(pid, t, t + run);
-      rem.set(pid, rem.get(pid) - run);
-      t += run;
-
-      if (rem.get(pid) === 0) done.set(pid, t);
-
-      // arrivals at this instant go in front of the process that just used its quantum
-      admit();
-      if (rem.get(pid) > 0) queue.push(pid);
-    }
-
-    var metrics = {};
-    procs.forEach(function (p) {
-      var ct = done.get(p.pid);
-      metrics[p.pid] = {
-        ct: ct,
-        tat: ct - p.at,
-        wt: ct - p.at - p.bt,
-        rt: first.get(p.pid) - p.at
-      };
-    });
-
-    return { segments: segs, metrics: metrics, end: t };
-  }
-
-  // Replays the student's own Gantt blocks as Round Robin turns so the ready
-  // queue can be shown next to their work. Never used for grading.
-  function rrTrace(procs, q, blocks) {
-    var rem = new Map(procs.map(function (p) { return [p.pid, p.bt]; }));
-    var admitted = {};
-    var queue = [];
-    var frames = [];
-    var pending = [];
-    var t = 0;
-
-    function admitUntil(time) {
-      var fresh = procs.filter(function (p) { return !admitted[p.pid] && p.at <= time; });
-      fresh.sort(function (a, b) { return a.at - b.at || a.id - b.id; });
-      fresh.forEach(function (p) { admitted[p.pid] = true; queue.push(p.pid); });
-      return fresh;
-    }
-
-    function frame(block, running, arrivals, warn) {
-      frames.push({
-        start: block ? block.start : t,
-        end: block ? block.end : null,
-        running: running,
-        queue: queue.map(function (pid) { return { pid: pid, rem: rem.get(pid) }; }),
-        arrivals: arrivals.map(function (p) { return { pid: p.pid, at: p.at }; }),
-        warn: warn || ''
-      });
-    }
-
-    frame(null, null, admitUntil(0), '');
-
-    blocks.forEach(function (b) {
-      var warn = [];
-      var arrivals = pending.concat(admitUntil(b.start));
-      pending = [];
-      var pid = b.pid;
-      var dur = b.end - b.start;
-
-      if (pid === 'IDLE') {
-        if (queue.length) warn.push('IDLE while processes are ready');
-        frame(b, 'IDLE', arrivals, warn.join(' \u00b7 '));
-        pending = admitUntil(b.end);
-        t = b.end;
-        return;
-      }
-
-      if (!admitted[pid]) {
-        warn.push(pid + ' has not arrived yet');
-      } else {
-        var qi = queue.indexOf(pid);
-        if (qi === -1) warn.push(pid + ' has already finished');
-        else {
-          if (qi > 0) warn.push(pid + ' was not at the front');
-          queue.splice(qi, 1);
+        function randInt(min, max) {
+          return min + Math.floor(Math.random() * (max - min + 1));
         }
-      }
-
-      if (dur > q) warn.push('a turn cannot exceed q = ' + q + ' ms');
-
-      frame(b, pid, arrivals, warn.join(' \u00b7 '));
-
-      rem.set(pid, Math.max(0, rem.get(pid) - dur));
-      pending = admitUntil(b.end);
-      t = b.end;
-      if (rem.get(pid) > 0) queue.push(pid);
-    });
-
-    if (blocks.length) frame(null, null, pending.concat(admitUntil(t)), '');
-
-    return frames;
-  }
-  /* PURE-END */
-  var state = {
-    algo: 'fcfs',
-    n: 5,
-    q: 3,
-    arrivals: true,
-    procs: [],
-    answers: {},
-    gantt: [],
-    solution: null,
-    submitted: false,
-    revealed: false
-  };
-
-  var $ = function (id) { return document.getElementById(id); };
-  var el = {};
-
-  function akey(pid, field) { return pid + '|' + field; }
-
-  function colorFor(pid) {
-    if (pid === 'IDLE') return '#94a3b8';
-    var i = (parseInt(pid.slice(1), 10) - 1) % PALETTE.length;
-    return PALETTE[i < 0 ? 0 : i];
-  }
-
-  function esc(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
-    });
-  }
-
-  /* ---------------- rendering ---------------- */
-
-  function renderChips() {
-    el.algoChips.innerHTML = Object.keys(ALGOS).map(function (k) {
-      return '<button type="button" class="chip' + (state.algo === k ? ' on' : '') +
-        '" data-algo="' + k + '">' + esc(ALGOS[k].label) + '</button>';
-    }).join('');
-
-    el.nChips.innerHTML = [3, 5, 7].map(function (n) {
-      return '<button type="button" class="chip' + (state.n === n ? ' on' : '') +
-        '" data-n="' + n + '">' + n + '</button>';
-    }).join('');
-
-    el.arrChips.innerHTML = [true, false].map(function (on) {
-      return '<button type="button" class="chip' + (state.arrivals === on ? ' on' : '') +
-        '" data-arr="' + (on ? '1' : '0') + '">' +
-        (on ? 'With arrival times' : 'Without arrival times') + '</button>';
-    }).join('');
-  }
-
-  function renderGiven() {
-    var prio = ALGOS[state.algo].prio;
-    var head = '<thead><tr><th>Process</th>' +
-      (state.arrivals ? '<th>Arrival</th>' : '') +
-      '<th>Burst</th>' +
-      (prio ? '<th>Priority</th>' : '') + '</tr></thead>';
-
-    var body = state.procs.map(function (p) {
-      return '<tr><td class="pid"><span class="dot" style="background:' + colorFor(p.pid) + '"></span>' +
-        p.pid + '</td>' + (state.arrivals ? '<td>' + p.at + '</td>' : '') +
-        '<td>' + p.bt + '</td>' +
-        (prio ? '<td>' + p.prio + '</td>' : '') + '</tr>';
-    }).join('');
-
-    el.givenTable.innerHTML = head + '<tbody>' + body + '</tbody>';
-  }
-
-  function renderRule() {
-    var txt;
-    if (state.algo === 'rr') {
-      txt = '<b>Round Robin, q = ' + state.q + ' ms</b>: each process runs for at most one quantum per turn, ' +
-        'then rejoins the back of the FIFO ready queue. Arrivals at the same instant join before the preempted process.';
-    } else {
-      txt = RULES[state.algo];
-      if (ALGOS[state.algo].prio) txt += ' <b>Lower number = higher priority.</b>';
-      txt += ' Ties go to the earlier arrival, then the lower process number.';
-    }
-
-    if (!state.arrivals) {
-      txt = 'All processes arrive at <b>t = 0</b>. ' + txt;
-      if (state.algo === 'fcfs') {
-        txt += ' With no arrival times they queue in process order, so <b>P1 starts first</b>.';
-      } else if (state.algo === 'srtf') {
-        txt += ' With everyone ready at t = 0, SRTF behaves exactly like SJF.';
-      }
-    }
-    el.ruleNote.innerHTML = txt;
-
-    el.formulaHint.innerHTML = state.arrivals
-      ? 'TAT = CT &minus; AT &nbsp;&middot;&nbsp; WT = TAT &minus; BT &nbsp;&middot;&nbsp; RT = first CPU time &minus; AT'
-      : 'TAT = CT &minus; BT &nbsp;&middot;&nbsp; WT = TAT &minus; BT &nbsp;&middot;&nbsp; RT = first CPU time';
-
-    el.ganttTopHint.innerHTML = 'Type the time each block ends at &mdash; one block per stretch of CPU time' +
-      (state.arrivals ? ', including <b>IDLE</b> gaps.' : '.');
-  }
-
-  function renderAnswer() {
-    var prio = ALGOS[state.algo].prio;
-    var head = '<thead><tr><th>Process</th>' +
-      (state.arrivals ? '<th>Arrival</th>' : '') +
-      '<th>Burst</th>' +
-      (prio ? '<th>Priority</th>' : '') +
-      '<th>Completion</th><th>Turnaround</th><th>Waiting</th><th>Response</th></tr></thead>';
-
-    var body = state.procs.map(function (p) {
-      var cells = FIELDS.map(function (f) {
-        var v = state.answers[akey(p.pid, f)] || '';
-        return '<td class="anscell">' +
-          '<input class="ans" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
-          'data-pid="' + p.pid + '" data-field="' + f + '" value="' + esc(v) + '" ' +
-          'aria-label="' + p.pid + ' ' + FIELD_LABEL[f] + '">' +
-          '<span class="sol" hidden></span></td>';
-      }).join('');
-
-      return '<tr><td class="pid"><span class="dot" style="background:' + colorFor(p.pid) + '"></span>' +
-        p.pid + '</td>' + (state.arrivals ? '<td>' + p.at + '</td>' : '') +
-        '<td>' + p.bt + '</td>' +
-        (prio ? '<td>' + p.prio + '</td>' : '') + cells + '</tr>';
-    }).join('');
-
-    el.answerTable.innerHTML = head + '<tbody>' + body + '</tbody>';
-  }
-  /* ---------------- gantt chart ---------------- */
-
-  // Each card holds an absolute end time; its start is where the previous card
-  // left off. A blank card does not move the clock forward.
-  function starts() {
-    var t = 0;
-    return state.gantt.map(function (b) {
-      var raw = String(b.end == null ? '' : b.end).trim();
-      var v = raw === '' ? NaN : parseInt(raw, 10);
-      var o = { s: t, e: t, d: 0, hasEnd: isFinite(v), valid: false };
-      if (o.hasEnd) {
-        o.e = v;
-        o.d = v - t;
-        if (v > t) { o.valid = true; t = v; }
-      }
-      return o;
-    });
-  }
-
-  // Blocks the user actually filled in, mapped to timed segments.
-  function rawBlocks() {
-    var st = starts();
-    var out = [];
-    state.gantt.forEach(function (b, i) {
-      if (!b.pid || !st[i].valid) return;
-      out.push({ pid: b.pid, start: st[i].s, end: st[i].e, d: st[i].d });
-    });
-    return out;
-  }
-
-  // Same blocks, with adjacent stretches of one process folded together.
-  function timeline() {
-    var out = [];
-    rawBlocks().forEach(function (seg) {
-      var last = out[out.length - 1];
-      if (last && last.pid === seg.pid && last.end === seg.start) {
-        last.end = seg.end;
-        last.d += seg.d;
-      } else {
-        out.push({ pid: seg.pid, start: seg.start, end: seg.end, d: seg.d });
-      }
-    });
-    return out;
-  }
-
-  function stripHTML(segs) {
-    if (!segs.length) return '<div class="gantt-preview"><div class="empty">No blocks yet</div></div>';
-    var bars = segs.map(function (s) {
-      return '<div class="gseg' + (s.pid === 'IDLE' ? ' idle' : '') + '" style="flex-grow:' + s.d +
-        ';background:' + colorFor(s.pid) + '" title="' + esc(s.pid) + ' \u00b7 ' + s.start + '\u2013' + s.end + '">' +
-        esc(s.pid) + '</div>';
-    }).join('');
-
-    // skip tick labels that would collide; fold their width into the next one
-    var total = segs.reduce(function (a, s) { return a + s.d; }, 0) || 1;
-    var ticks = '<span class="gtick zero">0</span>';
-    var pending = 0, lastFrac = 0;
-    segs.forEach(function (s, i) {
-      pending += s.d;
-      var frac = pending / total;
-      var isLast = i === segs.length - 1;
-      if (frac - lastFrac >= 0.06 || isLast) {
-        ticks += '<span class="gtick' + (isLast ? ' last' : '') + '" style="flex-grow:' + pending + '">' + s.end + '</span>';
-        lastFrac = frac;
-        pending = 0;
-      }
-    });
-
-    return '<div class="gantt-preview">' + bars + '</div><div class="gticks">' + ticks + '</div>';
-  }
-
-  function renderPreview() {
-    el.ganttPreview.innerHTML = stripHTML(timeline());
-    renderQueue();
-  }
-
-  /* ---------------- ready queue (round robin) ---------------- */
-
-  function chipHTML(pid, rem, front) {
-    return '<span class="rq-chip' + (front ? ' front' : '') + '"' +
-      ' style="background:' + colorFor(pid) + '"' +
-      ' title="' + esc(pid) + (rem == null ? '' : ' \u00b7 ' + rem + ' ms left') +
-      (front ? ' \u00b7 front of the queue' : '') + '">' +
-      esc(pid) + (rem == null ? '' : '<i>' + rem + '</i>') + '</span>';
-  }
-
-  function frameHTML(f, i, total) {
-    var isNow = i === total - 1;
-    var time = f.end == null
-      ? 't = ' + f.start
-      : f.start + '\u2013' + f.end + ' ms';
-
-    var cpu;
-    if (f.running === 'IDLE') cpu = '<span class="rq-chip idle">IDLE</span>';
-    else if (f.running) cpu = '<span class="rq-chip" style="background:' + colorFor(f.running) + '">' +
-      '<b class="rq-play">\u25b6</b>' + esc(f.running) + '</span>';
-    else cpu = '<span class="rq-empty">\u2014</span>';
-
-    var queue = f.queue.length
-      ? f.queue.map(function (it, k) { return chipHTML(it.pid, it.rem, k === 0); }).join('')
-      : '<span class="rq-empty">empty</span>';
-
-    var arrivals = f.arrivals.length
-      ? '<div class="rq-arr">\u2193 ' + f.arrivals.map(function (a) {
-          return esc(a.pid) + (a.at === f.start ? '' : ' @' + a.at);
-        }).join(', ') + '</div>'
-      : '';
-
-    return '<div class="rq-frame' + (isNow ? ' now' : '') + '">' +
-      '<div class="rq-time"><span>' + time + '</span>' +
-        (isNow ? '<span class="rq-now">now</span>' : '') + '</div>' +
-      '<div class="rq-row"><span class="rq-lbl">cpu</span><div class="rq-chips">' + cpu + '</div></div>' +
-      '<div class="rq-row"><span class="rq-lbl">queue</span><div class="rq-chips">' + queue + '</div></div>' +
-      arrivals +
-      (f.warn ? '<div class="rq-warn">' + esc(f.warn) + '</div>' : '') +
-      '</div>';
-  }
-
-  function renderQueue() {
-    if (!el.rqPanel) return;
-    if (state.algo !== 'rr') {
-      el.rqPanel.hidden = true;
-      el.rqStrip.innerHTML = '';
-      return;
-    }
-
-    var strip = el.rqStrip;
-    var follow = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 24;
-
-    el.rqPanel.hidden = false;
-    el.rqQ.textContent = 'q = ' + state.q + ' ms';
-
-    var frames = rrTrace(state.procs, state.q, rawBlocks());
-    strip.innerHTML = frames.map(function (f, i) {
-      return frameHTML(f, i, frames.length);
-    }).join('');
-
-    if (follow) strip.scrollLeft = strip.scrollWidth;
-  }
-
-  function cardEl(i) {
-    var b = state.gantt[i];
-    var st = starts()[i];
-    var node = document.createElement('div');
-    node.className = 'gcard';
-    node.dataset.i = String(i);
-    node.style.borderLeftColor = b.pid ? colorFor(b.pid) : 'var(--line)';
-
-    var opts = ['<option value="">process\u2026</option>'];
-    state.procs.forEach(function (p) {
-      opts.push('<option value="' + p.pid + '"' + (b.pid === p.pid ? ' selected' : '') + '>' + p.pid + '</option>');
-    });
-    opts.push('<option value="IDLE"' + (b.pid === 'IDLE' ? ' selected' : '') + '>IDLE</option>');
-
-    node.innerHTML =
-      '<div class="gcard-row">' +
-        '<select class="gsel" data-i="' + i + '" aria-label="Process">' + opts.join('') + '</select>' +
-        '<button type="button" class="icon" data-act="del" data-i="' + i + '" title="Delete block">\u00d7</button>' +
-      '</div>' +
-      '<div class="gcard-row">' +
-        '<input class="gend" type="text" inputmode="numeric" autocomplete="off" placeholder="end time" ' +
-          'data-i="' + i + '" value="' + esc(b.end) + '" aria-label="End time">' +
-      '</div>' +
-      '<div class="gr">' + captionHTML(st, b) + '</div>';
-
-    return node;
-  }
-
-  function captionHTML(st, b) {
-    if (st.hasEnd && !st.valid) return '<span class="warn">must end after ' + st.s + '</span>';
-    if (st.hasEnd && st.valid) return st.s + ' \u2192 ' + st.e;
-    if (b.pid) return 'starts at ' + st.s;
-    return '';
-  }
-
-  function renderEditor() {
-    el.ganttEditor.innerHTML = '';
-    state.gantt.forEach(function (_, i) {
-      el.ganttEditor.appendChild(cardEl(i));
-    });
-    updateRanges();
-  }
-
-  function updateRanges() {
-    var st = starts();
-    var cards = el.ganttEditor.querySelectorAll('.gcard');
-    for (var i = 0; i < cards.length; i++) {
-      var idx = parseInt(cards[i].dataset.i, 10);
-      var b = state.gantt[idx];
-      if (!b) continue;
-      var card = cards[i];
-      card.querySelector('.gr').innerHTML = captionHTML(st[idx], b);
-      card.style.borderLeftColor = b.pid ? colorFor(b.pid) : 'var(--line)';
-      card.querySelector('.gend').classList.toggle('warn', st[idx].hasEnd && !st[idx].valid);
-    }
-  }
-
-  function maybeAppend() {
-    var last = state.gantt[state.gantt.length - 1];
-    if (!last) return;
-    var st = starts();
-    var lastPos = st[st.length - 1];
-    if (last.pid && lastPos.valid) {
-      state.gantt.push({ pid: '', end: '' });
-      el.ganttEditor.appendChild(cardEl(state.gantt.length - 1));
-      updateRanges();
-    }
-  }
-  /* ---------------- grading ---------------- */
-
-  function normalizeUser() {
-    var st = starts();
-    var out = [];
-    state.gantt.forEach(function (b, idx) {
-      var hasPid = !!b.pid;
-      var pos = st[idx];
-      if (!hasPid && !pos.hasEnd) return; // completely blank card: ignore
-
-      if (!hasPid || !pos.valid) {
-        out.push({ invalid: true, idx: [idx] });
-        return;
-      }
-      var last = out[out.length - 1];
-      if (last && !last.invalid && last.pid === b.pid && last.end === pos.s) {
-        last.end = pos.e;
-        last.dur = last.end - last.start;
-        last.idx.push(idx);
-      } else {
-        out.push({ pid: b.pid, start: pos.s, end: pos.e, dur: pos.e - pos.s, idx: [idx] });
-      }
-    });
-    return out;
-  }
-
-  function gradeGantt() {
-    var canon = state.solution.segments.map(function (s) {
-      return { pid: s.pid, start: s.start, end: s.end, dur: s.end - s.start };
-    });
-    var user = normalizeUser();
-    var badCards = {};
-    var wrong = 0;
-    var matched = 0;
-
-    user.forEach(function (blk, i) {
-      var c = canon[i];
-      var ok = !blk.invalid && c &&
-        c.pid === blk.pid && c.start === blk.start && c.end === blk.end;
-      if (ok) {
-        matched++;
-      } else {
-        wrong++;
-        blk.idx.forEach(function (x) { badCards[x] = true; });
-      }
-    });
-
-    var missing = Math.max(0, canon.length - user.length);
-    var correct = user.length > 0 && wrong === 0 && missing === 0;
-    var empty = timeline().length === 0;
-
-    var pos = starts();
-    var endUser = 0;
-    pos.forEach(function (p) { if (p.valid && p.e > endUser) endUser = p.e; });
-    var endCanon = state.solution.end;
-
-    return {
-      correct: correct, empty: empty, wrong: wrong, missing: missing, matched: matched,
-      endUser: endUser, endCanon: endCanon, endWrong: endUser !== endCanon,
-      badCards: badCards, canon: canon, userCount: user.length, canonCount: canon.length
-    };
-  }
-
-  function gradeTable() {
-    var res = {};
-    var correct = 0;
-    var total = 0;
-
-    state.procs.forEach(function (p) {
-      var m = state.solution.metrics[p.pid];
-      FIELDS.forEach(function (f) {
-        total++;
-        var raw = String(state.answers[akey(p.pid, f)] == null ? '' : state.answers[akey(p.pid, f)]).trim();
-        var v = raw === '' ? NaN : Number(raw);
-        var ok = isFinite(v) && v === m[f];
-        if (ok) correct++;
-        res[akey(p.pid, f)] = { ok: ok, answer: m[f] };
-      });
-    });
-
-    return { correct: correct, total: total, res: res };
-  }
-
-  function applyMarks(g, t) {
-    var inputs = el.answerTable.querySelectorAll('.ans');
-    for (var i = 0; i < inputs.length; i++) {
-      var inp = inputs[i];
-      var r = t.res[akey(inp.dataset.pid, inp.dataset.field)];
-      if (!r) continue;
-      inp.classList.toggle('ok', r.ok);
-      inp.classList.toggle('bad', !r.ok);
-      var sol = inp.parentElement.querySelector('.sol');
-      if (state.revealed && !r.ok) {
-        sol.textContent = '= ' + r.answer;
-        sol.hidden = false;
-      } else {
-        sol.textContent = '';
-        sol.hidden = true;
-      }
-    }
-
-    var cards = el.ganttEditor.querySelectorAll('.gcard');
-    for (var k = 0; k < cards.length; k++) {
-      var idx = parseInt(cards[k].dataset.i, 10);
-      cards[k].classList.toggle('bad', !!g.badCards[idx]);
-    }
-
-    el.ganttHint.innerHTML = g.empty
-      ? ''
-      : (g.correct
-          ? '<span style="color:var(--good);font-weight:700">Gantt chart complete \u2713</span>'
-          : (g.wrong || g.missing)
-              ? 'Not quite \u2014 wrong blocks are outlined in red.' +
-                (g.endWrong ? ' Your chart ends at <b>t = ' + g.endUser + '</b>, it should end at <b>t = ' + g.endCanon + '</b>.' : '')
-              : '');
-  }
-
-  function renderScore(g, t) {
-    if (!state.submitted) { el.score.innerHTML = ''; return; }
-
-    var totalItems = t.total + g.canonCount;
-    var got = t.correct + g.matched;
-    var pct = Math.round((got / totalItems) * 100);
-
-    var tablePill = '<span class="pill ' + (t.correct === t.total ? 'good' : (t.correct === 0 ? 'bad' : 'mid')) + '">' +
-      'Table ' + t.correct + '/' + t.total + ' cells</span>';
-
-    var gText, gCls;
-    if (g.correct) { gText = 'Gantt correct'; gCls = 'good'; }
-    else if (g.empty) { gText = 'Gantt empty'; gCls = 'bad'; }
-    else {
-      var bits = [];
-      if (g.wrong) bits.push(g.wrong + ' wrong block' + (g.wrong === 1 ? '' : 's'));
-      if (g.missing) bits.push(g.missing + ' missing');
-      gText = 'Gantt: ' + bits.join(', ');
-      gCls = 'bad';
-    }
-
-    el.score.innerHTML =
-      '<span class="pill ' + (pct === 100 ? 'good' : (pct < 50 ? 'bad' : 'mid')) + '">' + pct + '%</span>' +
-      tablePill +
-      '<span class="pill ' + gCls + '">' + gText + '</span>';
-  }
-
-  function grade() {
-    var g = gradeGantt();
-    var t = gradeTable();
-    applyMarks(g, t);
-    renderScore(g, t);
-  }
-
-  /* ---------------- actions ---------------- */
-
-  function submit() {
-    state.submitted = true;
-    grade();
-  }
-
-  function clearMarks() {
-    el.answerTable.querySelectorAll('.ans').forEach(function (n) {
-      n.classList.remove('ok', 'bad');
-    });
-    el.answerTable.querySelectorAll('.sol').forEach(function (n) {
-      n.textContent = '';
-      n.hidden = true;
-    });
-    el.ganttEditor.querySelectorAll('.gcard').forEach(function (n) {
-      n.classList.remove('bad');
-    });
-    el.score.innerHTML = '';
-    el.ganttHint.innerHTML = '';
-  }
-
-  function hideSolution() {
-    el.solGantt.hidden = true;
-    el.solGantt.innerHTML = '';
-  }
-
-  function showSolution() {
-    state.submitted = true;
-    state.revealed = true;
-    el.solGantt.hidden = false;
-    el.solGantt.innerHTML = '<div class="sol-head">Correct Gantt chart</div>' +
-      stripHTML(state.solution.segments.map(function (s) {
-        return { pid: s.pid, start: s.start, end: s.end, d: s.end - s.start };
-      }));
-    grade();
-  }
-
-  function retry() {
-    state.submitted = false;
-    state.revealed = false;
-    clearMarks();
-    hideSolution();
-  }
-
-  function resetEntries() {
-    state.answers = {};
-    state.gantt = [{ pid: '', end: '' }, { pid: '', end: '' }];
-    state.submitted = false;
-    state.revealed = false;
-  }
-
-  function renderAll() {
-    renderChips();
-    renderGiven();
-    renderRule();
-    renderAnswer();
-    renderEditor();
-    renderPreview();
-    hideSolution();
-    clearMarks();
-    state.submitted = false;
-    state.revealed = false;
-  }
-
-  function newProblem() {
-    state.procs = generateProcs(state.n, state.arrivals);
-    state.q = randInt(2, 4);
-    state.solution = simulate(state.procs, state.algo, state.q);
-    resetEntries();
-    renderAll();
-  }
-
-  function changeAlgo(key) {
-    if (key === state.algo) return;
-    state.algo = key;
-    state.solution = simulate(state.procs, key, state.q); // same process set, new algorithm
-    resetEntries();
-    renderAll();
-  }
-
-  function changeArrivals(on) {
-    if (on === state.arrivals) return;
-    state.arrivals = on;
-    newProblem();
-  }
-
-  function changeN(n) {
-    if (n === state.n) return;
-    state.n = n;
-    newProblem();
-  }
-  /* ---------------- wiring ---------------- */
-
-  function bind() {
-    el = {
-      algoChips: $('algoChips'),
-      nChips: $('nChips'),
-      arrChips: $('arrChips'),
-      newBtn: $('newBtn'),
-      givenTable: $('givenTable'),
-      ruleNote: $('ruleNote'),
-      formulaHint: $('formulaHint'),
-      ganttTopHint: $('ganttTopHint'),
-      answerTable: $('answerTable'),
-      ganttEditor: $('ganttEditor'),
-      ganttPreview: $('ganttPreview'),
-      rqPanel: $('rqPanel'),
-      rqStrip: $('rqStrip'),
-      rqQ: $('rqQ'),
-      ganttHint: $('ganttHint'),
-      solGantt: $('solGantt'),
-      addBtn: $('addBtn'),
-      score: $('score'),
-      submitBtn: $('submitBtn'),
-      retryBtn: $('retryBtn'),
-      revealBtn: $('revealBtn')
-    };
-
-    el.algoChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-algo]');
-      if (b) changeAlgo(b.dataset.algo);
-    });
-
-    el.nChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-n]');
-      if (b) changeN(parseInt(b.dataset.n, 10));
-    });
-
-    el.arrChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-arr]');
-      if (b) changeArrivals(b.dataset.arr === '1');
-    });
-
-    el.newBtn.addEventListener('click', newProblem);
-    el.submitBtn.addEventListener('click', submit);
-    el.retryBtn.addEventListener('click', retry);
-    el.revealBtn.addEventListener('click', showSolution);
-
-    el.addBtn.addEventListener('click', function () {
-      state.gantt.push({ pid: '', end: '' });
-      var node = cardEl(state.gantt.length - 1);
-      el.ganttEditor.appendChild(node);
-      updateRanges();
-      var sel = node.querySelector('.gsel');
-      if (sel) sel.focus();
-    });
-
-    el.ganttEditor.addEventListener('input', function (e) {
-      var t = e.target;
-      if (t.classList.contains('gend')) {
-        t.value = t.value.replace(/\D/g, '').slice(0, 3);
-        state.gantt[parseInt(t.dataset.i, 10)].end = t.value;
-        updateRanges();
-        renderPreview();
-      }
-      if (state.submitted) grade();
-    });
-
-    el.ganttEditor.addEventListener('change', function (e) {
-      var t = e.target;
-      var i = parseInt(t.dataset.i, 10);
-      if (!state.gantt[i]) return;
-      if (t.classList.contains('gsel')) {
-        state.gantt[i].pid = t.value;
-      } else if (t.classList.contains('gend')) {
-        t.value = t.value.replace(/\D/g, '').slice(0, 3);
-        state.gantt[i].end = t.value;
-      }
-      updateRanges();
-      renderPreview();
-      maybeAppend();
-      if (state.submitted) grade();
-    });
-
-    el.ganttEditor.addEventListener('click', function (e) {
-      var b = e.target.closest('button[data-act="del"]');
-      if (!b) return;
-      var i = parseInt(b.dataset.i, 10);
-      state.gantt.splice(i, 1);
-      if (!state.gantt.length) state.gantt.push({ pid: '', end: '' });
-      renderEditor();
-      renderPreview();
-      if (state.submitted) grade();
-    });
-
-    el.answerTable.addEventListener('input', function (e) {
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      inp.value = inp.value.replace(/\D/g, '').slice(0, 3);
-      state.answers[akey(inp.dataset.pid, inp.dataset.field)] = inp.value;
-      if (state.submitted) grade();
-    });
-
-    el.answerTable.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') return;
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      e.preventDefault();
-      var all = Array.prototype.slice.call(el.answerTable.querySelectorAll('.ans'));
-      var idx = all.indexOf(inp);
-      if (idx >= 0 && idx < all.length - 1) all[idx + 1].focus();
-      else submit();
-    });
-
-    el.answerTable.addEventListener('focusin', function (e) {
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      setTimeout(function () { inp.select(); }, 0);
-    });
-  }
-
-  bind();
-  newProblem();
-})();
-</script>
-</body>
+
+        function shuffle(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = randInt(0, i);
+            var t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+          }
+          return a;
+        }
+
+        function generateProcs(n, withArrivals) {
+          var arrivals = null;
+          var draw;
+
+          // Exactly one process at t = 0, and no arrival time shared by more than two.
+          if (withArrivals) {
+            for (var attempt = 0; attempt < 200 && !arrivals; attempt++) {
+              draw = [];
+              for (var i = 0; i < n; i++) draw.push(randInt(0, 15));
+              if (validArrivals(draw)) arrivals = draw;
+            }
+
+            if (!arrivals) {
+              // deterministic fallback: one 0, then every other value at most twice
+              var pool = [0];
+              for (var v = 1; v <= 15; v++) {
+                pool.push(v);
+                pool.push(v);
+              }
+              arrivals = shuffle(pool).slice(0, n);
+              if (arrivals.indexOf(0) === -1) arrivals[0] = 0;
+            }
+          }
+
+          var bursts = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).slice(0, n);
+          var prios;
+          do {
+            prios = [];
+            for (var k = 0; k < n; k++) prios.push(randInt(1, 5));
+          } while (uniq(prios).length < 2);
+
+          var procs = [];
+          for (var p = 0; p < n; p++) {
+            procs.push({
+              pid: "P" + (p + 1),
+              id: p + 1,
+              at: withArrivals ? arrivals[p] : 0,
+              bt: bursts[p],
+              prio: prios[p],
+            });
+          }
+          return procs;
+        }
+
+        function validArrivals(list) {
+          var count = {};
+          for (var i = 0; i < list.length; i++) {
+            var v = list[i];
+            count[v] = (count[v] || 0) + 1;
+            if (count[v] > 2) return false;
+          }
+          return count[0] === 1;
+        }
+
+        function uniq(arr) {
+          var seen = {},
+            out = [];
+          for (var i = 0; i < arr.length; i++) {
+            if (!seen[arr[i]]) {
+              seen[arr[i]] = 1;
+              out.push(arr[i]);
+            }
+          }
+          return out;
+        }
+
+        function comparator(algoKey, rem) {
+          if (!ALGOS[algoKey].pre) {
+            if (algoKey === "fcfs")
+              return function (a, b) {
+                return a.at - b.at || a.id - b.id;
+              };
+            if (algoKey === "sjf")
+              return function (a, b) {
+                return a.bt - b.bt || a.at - b.at || a.id - b.id;
+              };
+            return function (a, b) {
+              return a.prio - b.prio || a.at - b.at || a.id - b.id;
+            };
+          }
+          if (algoKey === "srtf") {
+            return function (a, b) {
+              return (
+                rem.get(a.pid) - rem.get(b.pid) || a.at - b.at || a.id - b.id
+              );
+            };
+          }
+          return function (a, b) {
+            return a.prio - b.prio || a.at - b.at || a.id - b.id;
+          };
+        }
+
+        function simulate(procs, algoKey, quantum) {
+          if (algoKey === "rr") return simulateRR(procs, quantum);
+
+          var A = ALGOS[algoKey];
+          var rem = new Map(
+            procs.map(function (p) {
+              return [p.pid, p.bt];
+            }),
+          );
+          var cmp = comparator(algoKey, rem);
+          var first = new Map();
+          var done = new Map();
+          var segs = [];
+          var t = 0;
+          var guard = 0;
+
+          function pushSeg(pid, s, e) {
+            if (e <= s) return;
+            var last = segs[segs.length - 1];
+            if (last && last.pid === pid && last.end === s) last.end = e;
+            else segs.push({ pid: pid, start: s, end: e });
+          }
+
+          while (guard++ < 5000) {
+            var pending = procs.filter(function (p) {
+              return rem.get(p.pid) > 0;
+            });
+            if (!pending.length) break;
+
+            var ready = pending.filter(function (p) {
+              return p.at <= t;
+            });
+            if (!ready.length) {
+              var nextAt = Math.min.apply(
+                null,
+                pending.map(function (p) {
+                  return p.at;
+                }),
+              );
+              pushSeg("IDLE", t, nextAt);
+              t = nextAt;
+              continue;
+            }
+
+            var best = ready.slice().sort(cmp)[0];
+
+            if (A.pre) {
+              var upcoming = pending
+                .filter(function (p) {
+                  return p.at > t;
+                })
+                .map(function (p) {
+                  return p.at;
+                });
+              var limit = upcoming.length
+                ? Math.min.apply(null, upcoming)
+                : Infinity;
+              var end = Math.min(t + rem.get(best.pid), limit);
+              if (!first.has(best.pid)) first.set(best.pid, t);
+              pushSeg(best.pid, t, end);
+              rem.set(best.pid, rem.get(best.pid) - (end - t));
+              t = end;
+              if (rem.get(best.pid) === 0) done.set(best.pid, t);
+            } else {
+              var s = t,
+                e = t + rem.get(best.pid);
+              first.set(best.pid, s);
+              pushSeg(best.pid, s, e);
+              rem.set(best.pid, 0);
+              done.set(best.pid, e);
+              t = e;
+            }
+          }
+
+          var metrics = {};
+          procs.forEach(function (p) {
+            var ct = done.get(p.pid);
+            metrics[p.pid] = {
+              ct: ct,
+              tat: ct - p.at,
+              wt: ct - p.at - p.bt,
+              rt: first.get(p.pid) - p.at,
+            };
+          });
+
+          return { segments: segs, metrics: metrics, end: t };
+        }
+
+        // Round Robin: FIFO ready queue, at most `q` ms per turn.
+        function simulateRR(procs, q) {
+          var rem = new Map(
+            procs.map(function (p) {
+              return [p.pid, p.bt];
+            }),
+          );
+          var first = new Map();
+          var done = new Map();
+          var segs = [];
+          var queue = [];
+          var admitted = {};
+          var t = 0;
+          var guard = 0;
+
+          function pushSeg(pid, s, e) {
+            if (e <= s) return;
+            var last = segs[segs.length - 1];
+            if (last && last.pid === pid && last.end === s) last.end = e;
+            else segs.push({ pid: pid, start: s, end: e });
+          }
+
+          // Everyone whose arrival has come joins the queue in (arrival, pid) order.
+          function admit() {
+            var fresh = procs.filter(function (p) {
+              return !admitted[p.pid] && p.at <= t;
+            });
+            fresh.sort(function (a, b) {
+              return a.at - b.at || a.id - b.id;
+            });
+            fresh.forEach(function (p) {
+              admitted[p.pid] = true;
+              queue.push(p.pid);
+            });
+          }
+
+          while (guard++ < 20000) {
+            var pending = procs.filter(function (p) {
+              return rem.get(p.pid) > 0;
+            });
+            if (!pending.length) break;
+
+            admit();
+
+            if (!queue.length) {
+              var nextAt = Math.min.apply(
+                null,
+                pending.map(function (p) {
+                  return p.at;
+                }),
+              );
+              pushSeg("IDLE", t, nextAt);
+              t = nextAt;
+              continue;
+            }
+
+            var pid = queue.shift();
+            var run = Math.min(rem.get(pid), q);
+            if (!first.has(pid)) first.set(pid, t);
+            pushSeg(pid, t, t + run);
+            rem.set(pid, rem.get(pid) - run);
+            t += run;
+
+            if (rem.get(pid) === 0) done.set(pid, t);
+
+            // arrivals at this instant go in front of the process that just used its quantum
+            admit();
+            if (rem.get(pid) > 0) queue.push(pid);
+          }
+
+          var metrics = {};
+          procs.forEach(function (p) {
+            var ct = done.get(p.pid);
+            metrics[p.pid] = {
+              ct: ct,
+              tat: ct - p.at,
+              wt: ct - p.at - p.bt,
+              rt: first.get(p.pid) - p.at,
+            };
+          });
+
+          return { segments: segs, metrics: metrics, end: t };
+        }
+
+        // Replays the student's own Gantt blocks as Round Robin turns so the ready
+        // queue can be shown next to their work. Never used for grading.
+        function rrTrace(procs, q, blocks) {
+          var rem = new Map(
+            procs.map(function (p) {
+              return [p.pid, p.bt];
+            }),
+          );
+          var admitted = {};
+          var queue = [];
+          var frames = [];
+          var pending = [];
+          var t = 0;
+
+          function admitUntil(time) {
+            var fresh = procs.filter(function (p) {
+              return !admitted[p.pid] && p.at <= time;
+            });
+            fresh.sort(function (a, b) {
+              return a.at - b.at || a.id - b.id;
+            });
+            fresh.forEach(function (p) {
+              admitted[p.pid] = true;
+              queue.push(p.pid);
+            });
+            return fresh;
+          }
+
+          function frame(block, running, arrivals, warn) {
+            frames.push({
+              start: block ? block.start : t,
+              end: block ? block.end : null,
+              running: running,
+              queue: queue.map(function (pid) {
+                return { pid: pid, rem: rem.get(pid) };
+              }),
+              arrivals: arrivals.map(function (p) {
+                return { pid: p.pid, at: p.at };
+              }),
+              warn: warn || "",
+            });
+          }
+
+          frame(null, null, admitUntil(0), "");
+
+          blocks.forEach(function (b) {
+            var warn = [];
+            var arrivals = pending.concat(admitUntil(b.start));
+            pending = [];
+            var pid = b.pid;
+            var dur = b.end - b.start;
+
+            if (pid === "IDLE") {
+              if (queue.length) warn.push("IDLE while processes are ready");
+              frame(b, "IDLE", arrivals, warn.join(" \u00b7 "));
+              pending = admitUntil(b.end);
+              t = b.end;
+              return;
+            }
+
+            if (!admitted[pid]) {
+              warn.push(pid + " has not arrived yet");
+            } else {
+              var qi = queue.indexOf(pid);
+              if (qi === -1) warn.push(pid + " has already finished");
+              else {
+                if (qi > 0) warn.push(pid + " was not at the front");
+                queue.splice(qi, 1);
+              }
+            }
+
+            if (dur > q) warn.push("a turn cannot exceed q = " + q + " ms");
+
+            frame(b, pid, arrivals, warn.join(" \u00b7 "));
+
+            rem.set(pid, Math.max(0, rem.get(pid) - dur));
+            pending = admitUntil(b.end);
+            t = b.end;
+            if (rem.get(pid) > 0) queue.push(pid);
+          });
+
+          if (blocks.length)
+            frame(null, null, pending.concat(admitUntil(t)), "");
+
+          return frames;
+        }
+        /* PURE-END */
+        var state = {
+          algo: "fcfs",
+          n: 5,
+          q: 3,
+          arrivals: true,
+          procs: [],
+          answers: {},
+          gantt: [],
+          solution: null,
+          submitted: false,
+          revealed: false,
+        };
+
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+        var el = {};
+
+        function akey(pid, field) {
+          return pid + "|" + field;
+        }
+
+        function colorFor(pid) {
+          if (pid === "IDLE") return "#94a3b8";
+          var i = (parseInt(pid.slice(1), 10) - 1) % PALETTE.length;
+          return PALETTE[i < 0 ? 0 : i];
+        }
+
+        function esc(s) {
+          return String(s).replace(/[&<>"]/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+          });
+        }
+
+        /* ---------------- rendering ---------------- */
+
+        function renderChips() {
+          el.algoChips.innerHTML = Object.keys(ALGOS)
+            .map(function (k) {
+              return (
+                '<button type="button" class="chip' +
+                (state.algo === k ? " on" : "") +
+                '" data-algo="' +
+                k +
+                '">' +
+                esc(ALGOS[k].label) +
+                "</button>"
+              );
+            })
+            .join("");
+
+          el.nChips.innerHTML = [3, 5, 7]
+            .map(function (n) {
+              return (
+                '<button type="button" class="chip' +
+                (state.n === n ? " on" : "") +
+                '" data-n="' +
+                n +
+                '">' +
+                n +
+                "</button>"
+              );
+            })
+            .join("");
+
+          el.arrChips.innerHTML = [true, false]
+            .map(function (on) {
+              return (
+                '<button type="button" class="chip' +
+                (state.arrivals === on ? " on" : "") +
+                '" data-arr="' +
+                (on ? "1" : "0") +
+                '">' +
+                (on ? "With arrival times" : "Without arrival times") +
+                "</button>"
+              );
+            })
+            .join("");
+        }
+
+        function renderGiven() {
+          var prio = ALGOS[state.algo].prio;
+          var head =
+            "<thead><tr><th>Process</th>" +
+            (state.arrivals ? "<th>Arrival</th>" : "") +
+            "<th>Burst</th>" +
+            (prio ? "<th>Priority</th>" : "") +
+            "</tr></thead>";
+
+          var body = state.procs
+            .map(function (p) {
+              return (
+                '<tr><td class="pid"><span class="dot" style="background:' +
+                colorFor(p.pid) +
+                '"></span>' +
+                p.pid +
+                "</td>" +
+                (state.arrivals ? "<td>" + p.at + "</td>" : "") +
+                "<td>" +
+                p.bt +
+                "</td>" +
+                (prio ? "<td>" + p.prio + "</td>" : "") +
+                "</tr>"
+              );
+            })
+            .join("");
+
+          el.givenTable.innerHTML = head + "<tbody>" + body + "</tbody>";
+        }
+
+        function renderRule() {
+          var txt;
+          if (state.algo === "rr") {
+            txt =
+              "<b>Round Robin, q = " +
+              state.q +
+              " ms</b>: each process runs for at most one quantum per turn, " +
+              "then rejoins the back of the FIFO ready queue. Arrivals at the same instant join before the preempted process.";
+          } else {
+            txt = RULES[state.algo];
+            if (ALGOS[state.algo].prio)
+              txt += " <b>Lower number = higher priority.</b>";
+            txt +=
+              " Ties go to the earlier arrival, then the lower process number.";
+          }
+
+          if (!state.arrivals) {
+            txt = "All processes arrive at <b>t = 0</b>. " + txt;
+            if (state.algo === "fcfs") {
+              txt +=
+                " With no arrival times they queue in process order, so <b>P1 starts first</b>.";
+            } else if (state.algo === "srtf") {
+              txt +=
+                " With everyone ready at t = 0, SRTF behaves exactly like SJF.";
+            }
+          }
+          el.ruleNote.innerHTML = txt;
+
+          el.formulaHint.innerHTML = state.arrivals
+            ? "TAT = CT &minus; AT &nbsp;&middot;&nbsp; WT = TAT &minus; BT &nbsp;&middot;&nbsp; RT = first CPU time &minus; AT"
+            : "TAT = CT &minus; BT &nbsp;&middot;&nbsp; WT = TAT &minus; BT &nbsp;&middot;&nbsp; RT = first CPU time";
+
+          el.ganttTopHint.innerHTML =
+            "Type the time each block ends at &mdash; one block per stretch of CPU time" +
+            (state.arrivals ? ", including <b>IDLE</b> gaps." : ".");
+        }
+
+        function renderAnswer() {
+          var prio = ALGOS[state.algo].prio;
+          var head =
+            "<thead><tr><th>Process</th>" +
+            (state.arrivals ? "<th>Arrival</th>" : "") +
+            "<th>Burst</th>" +
+            (prio ? "<th>Priority</th>" : "") +
+            "<th>Completion</th><th>Turnaround</th><th>Waiting</th><th>Response</th></tr></thead>";
+
+          var body = state.procs
+            .map(function (p) {
+              var cells = FIELDS.map(function (f) {
+                var v = state.answers[akey(p.pid, f)] || "";
+                return (
+                  '<td class="anscell">' +
+                  '<input class="ans" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
+                  'data-pid="' +
+                  p.pid +
+                  '" data-field="' +
+                  f +
+                  '" value="' +
+                  esc(v) +
+                  '" ' +
+                  'aria-label="' +
+                  p.pid +
+                  " " +
+                  FIELD_LABEL[f] +
+                  '">' +
+                  '<span class="sol" hidden></span></td>'
+                );
+              }).join("");
+
+              return (
+                '<tr><td class="pid"><span class="dot" style="background:' +
+                colorFor(p.pid) +
+                '"></span>' +
+                p.pid +
+                "</td>" +
+                (state.arrivals ? "<td>" + p.at + "</td>" : "") +
+                "<td>" +
+                p.bt +
+                "</td>" +
+                (prio ? "<td>" + p.prio + "</td>" : "") +
+                cells +
+                "</tr>"
+              );
+            })
+            .join("");
+
+          el.answerTable.innerHTML = head + "<tbody>" + body + "</tbody>";
+        }
+        /* ---------------- gantt chart ---------------- */
+
+        // Each card holds an absolute end time; its start is where the previous card
+        // left off. A blank card does not move the clock forward.
+        function starts() {
+          var t = 0;
+          return state.gantt.map(function (b) {
+            var raw = String(b.end == null ? "" : b.end).trim();
+            var v = raw === "" ? NaN : parseInt(raw, 10);
+            var o = { s: t, e: t, d: 0, hasEnd: isFinite(v), valid: false };
+            if (o.hasEnd) {
+              o.e = v;
+              o.d = v - t;
+              if (v > t) {
+                o.valid = true;
+                t = v;
+              }
+            }
+            return o;
+          });
+        }
+
+        // Blocks the user actually filled in, mapped to timed segments.
+        function rawBlocks() {
+          var st = starts();
+          var out = [];
+          state.gantt.forEach(function (b, i) {
+            if (!b.pid || !st[i].valid) return;
+            out.push({ pid: b.pid, start: st[i].s, end: st[i].e, d: st[i].d });
+          });
+          return out;
+        }
+
+        // Same blocks, with adjacent stretches of one process folded together.
+        function timeline() {
+          var out = [];
+          rawBlocks().forEach(function (seg) {
+            var last = out[out.length - 1];
+            if (last && last.pid === seg.pid && last.end === seg.start) {
+              last.end = seg.end;
+              last.d += seg.d;
+            } else {
+              out.push({
+                pid: seg.pid,
+                start: seg.start,
+                end: seg.end,
+                d: seg.d,
+              });
+            }
+          });
+          return out;
+        }
+
+        function stripHTML(segs) {
+          if (!segs.length)
+            return '<div class="gantt-preview"><div class="empty">No blocks yet</div></div>';
+          var bars = segs
+            .map(function (s) {
+              return (
+                '<div class="gseg' +
+                (s.pid === "IDLE" ? " idle" : "") +
+                '" style="flex-grow:' +
+                s.d +
+                ";background:" +
+                colorFor(s.pid) +
+                '" title="' +
+                esc(s.pid) +
+                " \u00b7 " +
+                s.start +
+                "\u2013" +
+                s.end +
+                '">' +
+                esc(s.pid) +
+                "</div>"
+              );
+            })
+            .join("");
+
+          // skip tick labels that would collide; fold their width into the next one
+          var total =
+            segs.reduce(function (a, s) {
+              return a + s.d;
+            }, 0) || 1;
+          var ticks = '<span class="gtick zero">0</span>';
+          var pending = 0,
+            lastFrac = 0;
+          segs.forEach(function (s, i) {
+            pending += s.d;
+            var frac = pending / total;
+            var isLast = i === segs.length - 1;
+            if (frac - lastFrac >= 0.06 || isLast) {
+              ticks +=
+                '<span class="gtick' +
+                (isLast ? " last" : "") +
+                '" style="flex-grow:' +
+                pending +
+                '">' +
+                s.end +
+                "</span>";
+              lastFrac = frac;
+              pending = 0;
+            }
+          });
+
+          return (
+            '<div class="gantt-preview">' +
+            bars +
+            '</div><div class="gticks">' +
+            ticks +
+            "</div>"
+          );
+        }
+
+        function renderPreview() {
+          el.ganttPreview.innerHTML = stripHTML(timeline());
+          renderQueue();
+        }
+
+        /* ---------------- ready queue (round robin) ---------------- */
+
+        function chipHTML(pid, rem, front) {
+          return (
+            '<span class="rq-chip' +
+            (front ? " front" : "") +
+            '"' +
+            ' style="background:' +
+            colorFor(pid) +
+            '"' +
+            ' title="' +
+            esc(pid) +
+            (rem == null ? "" : " \u00b7 " + rem + " ms left") +
+            (front ? " \u00b7 front of the queue" : "") +
+            '">' +
+            esc(pid) +
+            (rem == null ? "" : "<i>" + rem + "</i>") +
+            "</span>"
+          );
+        }
+
+        function frameHTML(f, i, total) {
+          var isNow = i === total - 1;
+          var time =
+            f.end == null
+              ? "t = " + f.start
+              : f.start + "\u2013" + f.end + " ms";
+
+          var cpu;
+          if (f.running === "IDLE")
+            cpu = '<span class="rq-chip idle">IDLE</span>';
+          else if (f.running)
+            cpu =
+              '<span class="rq-chip" style="background:' +
+              colorFor(f.running) +
+              '">' +
+              '<b class="rq-play">\u25b6</b>' +
+              esc(f.running) +
+              "</span>";
+          else cpu = '<span class="rq-empty">\u2014</span>';
+
+          var queue = f.queue.length
+            ? f.queue
+                .map(function (it, k) {
+                  return chipHTML(it.pid, it.rem, k === 0);
+                })
+                .join("")
+            : '<span class="rq-empty">empty</span>';
+
+          var arrivals = f.arrivals.length
+            ? '<div class="rq-arr">\u2193 ' +
+              f.arrivals
+                .map(function (a) {
+                  return esc(a.pid) + (a.at === f.start ? "" : " @" + a.at);
+                })
+                .join(", ") +
+              "</div>"
+            : "";
+
+          return (
+            '<div class="rq-frame' +
+            (isNow ? " now" : "") +
+            '">' +
+            '<div class="rq-time"><span>' +
+            time +
+            "</span>" +
+            (isNow ? '<span class="rq-now">now</span>' : "") +
+            "</div>" +
+            '<div class="rq-row"><span class="rq-lbl">cpu</span><div class="rq-chips">' +
+            cpu +
+            "</div></div>" +
+            '<div class="rq-row"><span class="rq-lbl">queue</span><div class="rq-chips">' +
+            queue +
+            "</div></div>" +
+            arrivals +
+            (f.warn ? '<div class="rq-warn">' + esc(f.warn) + "</div>" : "") +
+            "</div>"
+          );
+        }
+
+        function renderQueue() {
+          if (!el.rqPanel) return;
+          if (state.algo !== "rr") {
+            el.rqPanel.hidden = true;
+            el.rqStrip.innerHTML = "";
+            return;
+          }
+
+          var strip = el.rqStrip;
+          var follow =
+            strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 24;
+
+          el.rqPanel.hidden = false;
+          el.rqQ.textContent = "q = " + state.q + " ms";
+
+          var frames = rrTrace(state.procs, state.q, rawBlocks());
+          strip.innerHTML = frames
+            .map(function (f, i) {
+              return frameHTML(f, i, frames.length);
+            })
+            .join("");
+
+          if (follow) strip.scrollLeft = strip.scrollWidth;
+        }
+
+        function cardEl(i) {
+          var b = state.gantt[i];
+          var st = starts()[i];
+          var node = document.createElement("div");
+          node.className = "gcard";
+          node.dataset.i = String(i);
+          node.style.borderLeftColor = b.pid ? colorFor(b.pid) : "var(--line)";
+
+          var opts = ['<option value="">process\u2026</option>'];
+          state.procs.forEach(function (p) {
+            opts.push(
+              '<option value="' +
+                p.pid +
+                '"' +
+                (b.pid === p.pid ? " selected" : "") +
+                ">" +
+                p.pid +
+                "</option>",
+            );
+          });
+          opts.push(
+            '<option value="IDLE"' +
+              (b.pid === "IDLE" ? " selected" : "") +
+              ">IDLE</option>",
+          );
+
+          node.innerHTML =
+            '<div class="gcard-row">' +
+            '<select class="gsel" data-i="' +
+            i +
+            '" aria-label="Process">' +
+            opts.join("") +
+            "</select>" +
+            '<button type="button" class="icon" data-act="del" data-i="' +
+            i +
+            '" title="Delete block">\u00d7</button>' +
+            "</div>" +
+            '<div class="gcard-row">' +
+            '<input class="gend" type="text" inputmode="numeric" autocomplete="off" placeholder="end time" ' +
+            'data-i="' +
+            i +
+            '" value="' +
+            esc(b.end) +
+            '" aria-label="End time">' +
+            "</div>" +
+            '<div class="gr">' +
+            captionHTML(st, b) +
+            "</div>";
+
+          return node;
+        }
+
+        function captionHTML(st, b) {
+          if (st.hasEnd && !st.valid)
+            return '<span class="warn">must end after ' + st.s + "</span>";
+          if (st.hasEnd && st.valid) return st.s + " \u2192 " + st.e;
+          if (b.pid) return "starts at " + st.s;
+          return "";
+        }
+
+        function renderEditor() {
+          el.ganttEditor.innerHTML = "";
+          state.gantt.forEach(function (_, i) {
+            el.ganttEditor.appendChild(cardEl(i));
+          });
+          updateRanges();
+        }
+
+        function updateRanges() {
+          var st = starts();
+          var cards = el.ganttEditor.querySelectorAll(".gcard");
+          for (var i = 0; i < cards.length; i++) {
+            var idx = parseInt(cards[i].dataset.i, 10);
+            var b = state.gantt[idx];
+            if (!b) continue;
+            var card = cards[i];
+            card.querySelector(".gr").innerHTML = captionHTML(st[idx], b);
+            card.style.borderLeftColor = b.pid
+              ? colorFor(b.pid)
+              : "var(--line)";
+            card
+              .querySelector(".gend")
+              .classList.toggle("warn", st[idx].hasEnd && !st[idx].valid);
+          }
+        }
+
+        function maybeAppend() {
+          var last = state.gantt[state.gantt.length - 1];
+          if (!last) return;
+          var st = starts();
+          var lastPos = st[st.length - 1];
+          if (last.pid && lastPos.valid) {
+            state.gantt.push({ pid: "", end: "" });
+            el.ganttEditor.appendChild(cardEl(state.gantt.length - 1));
+            updateRanges();
+          }
+        }
+        /* ---------------- grading ---------------- */
+
+        function normalizeUser() {
+          var st = starts();
+          var out = [];
+          state.gantt.forEach(function (b, idx) {
+            var hasPid = !!b.pid;
+            var pos = st[idx];
+            if (!hasPid && !pos.hasEnd) return; // completely blank card: ignore
+
+            if (!hasPid || !pos.valid) {
+              out.push({ invalid: true, idx: [idx] });
+              return;
+            }
+            var last = out[out.length - 1];
+            if (
+              last &&
+              !last.invalid &&
+              last.pid === b.pid &&
+              last.end === pos.s
+            ) {
+              last.end = pos.e;
+              last.dur = last.end - last.start;
+              last.idx.push(idx);
+            } else {
+              out.push({
+                pid: b.pid,
+                start: pos.s,
+                end: pos.e,
+                dur: pos.e - pos.s,
+                idx: [idx],
+              });
+            }
+          });
+          return out;
+        }
+
+        function gradeGantt() {
+          var canon = state.solution.segments.map(function (s) {
+            return {
+              pid: s.pid,
+              start: s.start,
+              end: s.end,
+              dur: s.end - s.start,
+            };
+          });
+          var user = normalizeUser();
+          var badCards = {};
+          var wrong = 0;
+          var matched = 0;
+
+          user.forEach(function (blk, i) {
+            var c = canon[i];
+            var ok =
+              !blk.invalid &&
+              c &&
+              c.pid === blk.pid &&
+              c.start === blk.start &&
+              c.end === blk.end;
+            if (ok) {
+              matched++;
+            } else {
+              wrong++;
+              blk.idx.forEach(function (x) {
+                badCards[x] = true;
+              });
+            }
+          });
+
+          var missing = Math.max(0, canon.length - user.length);
+          var correct = user.length > 0 && wrong === 0 && missing === 0;
+          var empty = timeline().length === 0;
+
+          var pos = starts();
+          var endUser = 0;
+          pos.forEach(function (p) {
+            if (p.valid && p.e > endUser) endUser = p.e;
+          });
+          var endCanon = state.solution.end;
+
+          return {
+            correct: correct,
+            empty: empty,
+            wrong: wrong,
+            missing: missing,
+            matched: matched,
+            endUser: endUser,
+            endCanon: endCanon,
+            endWrong: endUser !== endCanon,
+            badCards: badCards,
+            canon: canon,
+            userCount: user.length,
+            canonCount: canon.length,
+          };
+        }
+
+        function gradeTable() {
+          var res = {};
+          var correct = 0;
+          var total = 0;
+
+          state.procs.forEach(function (p) {
+            var m = state.solution.metrics[p.pid];
+            FIELDS.forEach(function (f) {
+              total++;
+              var raw = String(
+                state.answers[akey(p.pid, f)] == null
+                  ? ""
+                  : state.answers[akey(p.pid, f)],
+              ).trim();
+              var v = raw === "" ? NaN : Number(raw);
+              var ok = isFinite(v) && v === m[f];
+              if (ok) correct++;
+              res[akey(p.pid, f)] = { ok: ok, answer: m[f] };
+            });
+          });
+
+          return { correct: correct, total: total, res: res };
+        }
+
+        function applyMarks(g, t) {
+          var inputs = el.answerTable.querySelectorAll(".ans");
+          for (var i = 0; i < inputs.length; i++) {
+            var inp = inputs[i];
+            var r = t.res[akey(inp.dataset.pid, inp.dataset.field)];
+            if (!r) continue;
+            inp.classList.toggle("ok", r.ok);
+            inp.classList.toggle("bad", !r.ok);
+            var sol = inp.parentElement.querySelector(".sol");
+            if (state.revealed && !r.ok) {
+              sol.textContent = "= " + r.answer;
+              sol.hidden = false;
+            } else {
+              sol.textContent = "";
+              sol.hidden = true;
+            }
+          }
+
+          var cards = el.ganttEditor.querySelectorAll(".gcard");
+          for (var k = 0; k < cards.length; k++) {
+            var idx = parseInt(cards[k].dataset.i, 10);
+            cards[k].classList.toggle("bad", !!g.badCards[idx]);
+          }
+
+          el.ganttHint.innerHTML = g.empty
+            ? ""
+            : g.correct
+              ? '<span style="color:var(--good);font-weight:700">Gantt chart complete \u2713</span>'
+              : g.wrong || g.missing
+                ? "Not quite \u2014 wrong blocks are outlined in red." +
+                  (g.endWrong
+                    ? " Your chart ends at <b>t = " +
+                      g.endUser +
+                      "</b>, it should end at <b>t = " +
+                      g.endCanon +
+                      "</b>."
+                    : "")
+                : "";
+        }
+
+        function renderScore(g, t) {
+          if (!state.submitted) {
+            el.score.innerHTML = "";
+            return;
+          }
+
+          var totalItems = t.total + g.canonCount;
+          var got = t.correct + g.matched;
+          var pct = Math.round((got / totalItems) * 100);
+
+          var tablePill =
+            '<span class="pill ' +
+            (t.correct === t.total ? "good" : t.correct === 0 ? "bad" : "mid") +
+            '">' +
+            "Table " +
+            t.correct +
+            "/" +
+            t.total +
+            " cells</span>";
+
+          var gText, gCls;
+          if (g.correct) {
+            gText = "Gantt correct";
+            gCls = "good";
+          } else if (g.empty) {
+            gText = "Gantt empty";
+            gCls = "bad";
+          } else {
+            var bits = [];
+            if (g.wrong)
+              bits.push(g.wrong + " wrong block" + (g.wrong === 1 ? "" : "s"));
+            if (g.missing) bits.push(g.missing + " missing");
+            gText = "Gantt: " + bits.join(", ");
+            gCls = "bad";
+          }
+
+          el.score.innerHTML =
+            '<span class="pill ' +
+            (pct === 100 ? "good" : pct < 50 ? "bad" : "mid") +
+            '">' +
+            pct +
+            "%</span>" +
+            tablePill +
+            '<span class="pill ' +
+            gCls +
+            '">' +
+            gText +
+            "</span>";
+        }
+
+        function grade() {
+          var g = gradeGantt();
+          var t = gradeTable();
+          applyMarks(g, t);
+          renderScore(g, t);
+        }
+
+        /* ---------------- actions ---------------- */
+
+        function submit() {
+          state.submitted = true;
+          grade();
+        }
+
+        function clearMarks() {
+          el.answerTable.querySelectorAll(".ans").forEach(function (n) {
+            n.classList.remove("ok", "bad");
+          });
+          el.answerTable.querySelectorAll(".sol").forEach(function (n) {
+            n.textContent = "";
+            n.hidden = true;
+          });
+          el.ganttEditor.querySelectorAll(".gcard").forEach(function (n) {
+            n.classList.remove("bad");
+          });
+          el.score.innerHTML = "";
+          el.ganttHint.innerHTML = "";
+        }
+
+        function hideSolution() {
+          el.solGantt.hidden = true;
+          el.solGantt.innerHTML = "";
+        }
+
+        function showSolution() {
+          state.submitted = true;
+          state.revealed = true;
+          el.solGantt.hidden = false;
+          el.solGantt.innerHTML =
+            '<div class="sol-head">Correct Gantt chart</div>' +
+            stripHTML(
+              state.solution.segments.map(function (s) {
+                return {
+                  pid: s.pid,
+                  start: s.start,
+                  end: s.end,
+                  d: s.end - s.start,
+                };
+              }),
+            );
+          grade();
+        }
+
+        function retry() {
+          state.submitted = false;
+          state.revealed = false;
+          clearMarks();
+          hideSolution();
+        }
+
+        function resetEntries() {
+          state.answers = {};
+          state.gantt = [
+            { pid: "", end: "" },
+            { pid: "", end: "" },
+          ];
+          state.submitted = false;
+          state.revealed = false;
+        }
+
+        function renderAll() {
+          renderChips();
+          renderGiven();
+          renderRule();
+          renderAnswer();
+          renderEditor();
+          renderPreview();
+          hideSolution();
+          clearMarks();
+          state.submitted = false;
+          state.revealed = false;
+        }
+
+        function newProblem() {
+          state.procs = generateProcs(state.n, state.arrivals);
+          state.q = randInt(2, 4);
+          state.solution = simulate(state.procs, state.algo, state.q);
+          resetEntries();
+          renderAll();
+        }
+
+        function changeAlgo(key) {
+          if (key === state.algo) return;
+          state.algo = key;
+          state.solution = simulate(state.procs, key, state.q); // same process set, new algorithm
+          resetEntries();
+          renderAll();
+        }
+
+        function changeArrivals(on) {
+          if (on === state.arrivals) return;
+          state.arrivals = on;
+          newProblem();
+        }
+
+        function changeN(n) {
+          if (n === state.n) return;
+          state.n = n;
+          newProblem();
+        }
+        /* ---------------- wiring ---------------- */
+
+        function bind() {
+          el = {
+            algoChips: $("algoChips"),
+            nChips: $("nChips"),
+            arrChips: $("arrChips"),
+            newBtn: $("newBtn"),
+            givenTable: $("givenTable"),
+            ruleNote: $("ruleNote"),
+            formulaHint: $("formulaHint"),
+            ganttTopHint: $("ganttTopHint"),
+            answerTable: $("answerTable"),
+            ganttEditor: $("ganttEditor"),
+            ganttPreview: $("ganttPreview"),
+            rqPanel: $("rqPanel"),
+            rqStrip: $("rqStrip"),
+            rqQ: $("rqQ"),
+            ganttHint: $("ganttHint"),
+            solGantt: $("solGantt"),
+            addBtn: $("addBtn"),
+            score: $("score"),
+            submitBtn: $("submitBtn"),
+            retryBtn: $("retryBtn"),
+            revealBtn: $("revealBtn"),
+          };
+
+          el.algoChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-algo]");
+            if (b) changeAlgo(b.dataset.algo);
+          });
+
+          el.nChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-n]");
+            if (b) changeN(parseInt(b.dataset.n, 10));
+          });
+
+          el.arrChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-arr]");
+            if (b) changeArrivals(b.dataset.arr === "1");
+          });
+
+          el.newBtn.addEventListener("click", newProblem);
+          el.submitBtn.addEventListener("click", submit);
+          el.retryBtn.addEventListener("click", retry);
+          el.revealBtn.addEventListener("click", showSolution);
+
+          el.addBtn.addEventListener("click", function () {
+            state.gantt.push({ pid: "", end: "" });
+            var node = cardEl(state.gantt.length - 1);
+            el.ganttEditor.appendChild(node);
+            updateRanges();
+            var sel = node.querySelector(".gsel");
+            if (sel) sel.focus();
+          });
+
+          el.ganttEditor.addEventListener("input", function (e) {
+            var t = e.target;
+            if (t.classList.contains("gend")) {
+              t.value = t.value.replace(/\D/g, "").slice(0, 3);
+              state.gantt[parseInt(t.dataset.i, 10)].end = t.value;
+              updateRanges();
+              renderPreview();
+            }
+            if (state.submitted) grade();
+          });
+
+          el.ganttEditor.addEventListener("change", function (e) {
+            var t = e.target;
+            var i = parseInt(t.dataset.i, 10);
+            if (!state.gantt[i]) return;
+            if (t.classList.contains("gsel")) {
+              state.gantt[i].pid = t.value;
+            } else if (t.classList.contains("gend")) {
+              t.value = t.value.replace(/\D/g, "").slice(0, 3);
+              state.gantt[i].end = t.value;
+            }
+            updateRanges();
+            renderPreview();
+            maybeAppend();
+            if (state.submitted) grade();
+          });
+
+          el.ganttEditor.addEventListener("click", function (e) {
+            var b = e.target.closest('button[data-act="del"]');
+            if (!b) return;
+            var i = parseInt(b.dataset.i, 10);
+            state.gantt.splice(i, 1);
+            if (!state.gantt.length) state.gantt.push({ pid: "", end: "" });
+            renderEditor();
+            renderPreview();
+            if (state.submitted) grade();
+          });
+
+          el.answerTable.addEventListener("input", function (e) {
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            inp.value = inp.value.replace(/\D/g, "").slice(0, 3);
+            state.answers[akey(inp.dataset.pid, inp.dataset.field)] = inp.value;
+            if (state.submitted) grade();
+          });
+
+          el.answerTable.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            e.preventDefault();
+            var all = Array.prototype.slice.call(
+              el.answerTable.querySelectorAll(".ans"),
+            );
+            var idx = all.indexOf(inp);
+            if (idx >= 0 && idx < all.length - 1) all[idx + 1].focus();
+            else submit();
+          });
+
+          el.answerTable.addEventListener("focusin", function (e) {
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            setTimeout(function () {
+              inp.select();
+            }, 0);
+          });
+        }
+
+        bind();
+        newProblem();
+      })();
+    </script>
+  </body>
 </html>

@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Replacement Practice</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap wide">
+      <header>
+        <nav class="nav" aria-label="Practice pages">
+          <a href="index.html">CPU Scheduling</a>
+          <a href="bankers.html">Banker&rsquo;s Algorithm</a>
+          <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+          <a href="paging.html" class="on" aria-current="page"
+            >Page Replacement</a
+          >
+        </nav>
+        <h1>Page Replacement Practice</h1>
+        <p>
+          Pick an algorithm, trace the page frames through the reference string,
+          then enter the fault/hit results and totals. All steps are graded.
+        </p>
+      </header>
+
+      <section class="panel controls paging">
+        <div class="group">
+          <div class="glabel">Algorithm</div>
+          <div class="chips" id="algoChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Frames</div>
+          <div class="chips" id="frameChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">References</div>
+          <div class="chips" id="lenChips"></div>
+        </div>
+        <div class="group paging-actions">
+          <button class="btn" id="newBtn" type="button">
+            &#8635; New problem
+          </button>
+          <button class="btn" id="exampleBtn" type="button">
+            Load the example
+          </button>
+          <button class="btn ghost" id="customToggle" type="button">
+            Enter your own
+          </button>
+        </div>
+      </section>
+
+      <section class="panel custom-panel" id="customPanel" hidden>
+        <div class="panel-head">
+          <h2>Custom reference string</h2>
+          <span class="hint"
+            >Use commas or spaces. 2&ndash;30 page numbers from 1&ndash;99.
+            Frames: 1&ndash;10.</span
+          >
+        </div>
+        <div class="custom-form">
+          <label class="custom-field"
+            >Reference string
+            <textarea
+              id="customRefs"
+              rows="2"
+              spellcheck="false"
+              placeholder="e.g. 1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5"
+            ></textarea>
+          </label>
+          <label class="custom-field small"
+            >Frames
+            <input
+              id="customFrames"
+              type="text"
+              inputmode="numeric"
+              value="3"
+              maxlength="2"
+            />
+          </label>
+          <div class="custom-buttons">
+            <button class="btn primary" id="customApply" type="button">
+              Use this problem
+            </button>
+            <button class="btn" id="customCancel" type="button">Cancel</button>
+          </div>
+        </div>
+        <div class="custom-msg" id="customMsg" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Given data</h2>
+          <span class="note" id="ruleNote"></span>
+        </div>
+        <p class="given-text" id="givenText"></p>
+        <div class="ref-strip-wrap">
+          <div class="mini-label">Reference string</div>
+          <div class="ref-strip" id="refStrip"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 1</span> Trace table</h2>
+          <span class="hint"
+            >Fill every frame after each reference. Use a blank or
+            <b>&ndash;</b> for an empty frame. In <b>Result</b> enter
+            <b>F</b> (page fault) or <b>H</b> (hit).</span
+          >
+        </div>
+        <div class="table-wrap paging-wrap">
+          <table class="paging-table" id="traceTable"></table>
+        </div>
+        <div class="legend paging-legend">
+          <span class="key"><b>F</b> = page fault</span
+          ><span class="key"><b>H</b> = hit</span
+          ><span class="key"
+            >Leave a cell blank or type <b>&ndash;</b> if the frame is
+            empty</span
+          >
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 2</span> Results</h2>
+          <span class="hint" id="totalHint"
+            >Hit ratio = hits &divide; references. You may enter a percentage
+            (e.g. 16.7) or a fraction (e.g. 2/12).</span
+          >
+        </div>
+        <div class="totals-grid">
+          <label class="total-field"
+            >Total page faults
+            <input
+              class="ans total-in"
+              id="faultsIn"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="3"
+              aria-label="Total page faults"
+            />
+            <span class="sol" id="faultsSol" hidden></span>
+          </label>
+          <label class="total-field"
+            >Hit ratio
+            <input
+              class="ans total-in"
+              id="ratioIn"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="8"
+              aria-label="Hit ratio"
+            />
+            <span class="sol" id="ratioSol" hidden></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel sol-block" id="solutionPanel" hidden>
+        <div class="sol-head sol-good" id="solHead">Correct solution</div>
+        <div id="solCompare" class="sol-compare"></div>
+        <div class="table-wrap paging-wrap">
+          <table class="paging-table solution" id="solTable"></table>
+        </div>
+        <div class="sol-totals" id="solTotals"></div>
+        <details class="why">
+          <summary>Why each page was replaced</summary>
+          <ol id="whyList" class="why-list"></ol>
+        </details>
+      </section>
+    </div>
+
+    <footer class="actions">
+      <div class="actions-inner">
+        <div class="score" id="score" aria-live="polite"></div>
+        <div class="btns">
+          <button class="btn primary" id="submitBtn" type="button">
+            Submit
+          </button>
+          <button class="btn" id="retryBtn" type="button">Try again</button>
+          <button class="btn" id="revealBtn" type="button">Show answer</button>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        "use strict";
+
+        /* PURE-START */
+        var ALGOS = {
+          fifo: {
+            label: "FIFO",
+            rule: "<b>FIFO</b>: replace the page that has been in memory the longest. A hit does not change the queue order.",
+          },
+          optimal: {
+            label: "Optimal",
+            rule: "<b>Optimal</b>: replace the page whose next use is farthest in the future (or never). <b>Tie rule:</b> if more than one page is never used again, evict the page in the lowest-numbered frame.",
+          },
+          lru: {
+            label: "LRU",
+            rule: "<b>LRU</b>: replace the page that was least recently used (used farthest back in the past).",
+          },
+        };
+
+        var EXAMPLE_REFS = [1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5];
+
+        function randInt(min, max) {
+          return min + Math.floor(Math.random() * (max - min + 1));
+        }
+
+        function cloneFrames(fr) {
+          var out = [];
+          for (var i = 0; i < fr.length; i++) out.push(fr[i]);
+          return out;
+        }
+
+        function nextUse(refs, fromIndex, page) {
+          for (var j = fromIndex + 1; j < refs.length; j++) {
+            if (refs[j] === page) return j;
+          }
+          return Infinity;
+        }
+
+        function simulate(refs, frameCount, algo) {
+          var frames = [];
+          for (var i = 0; i < frameCount; i++) frames.push(null);
+          var fifoQueue = []; // pages in order of load for FIFO
+          var lastUsed = {}; // page -> last index, for LRU
+          var steps = [];
+          var faults = 0;
+
+          for (var t = 0; t < refs.length; t++) {
+            var page = refs[t];
+            var hit = frames.indexOf(page) !== -1;
+            var reason = "";
+            var replaced = null;
+            var victimFrame = -1;
+
+            if (hit) {
+              reason = "Page " + page + " is already in a frame (hit).";
+              lastUsed[page] = t;
+            } else {
+              faults++;
+              var emptyIdx = -1;
+              for (var e = 0; e < frames.length; e++) {
+                if (frames[e] === null) {
+                  emptyIdx = e;
+                  break;
+                }
+              }
+              if (emptyIdx !== -1) {
+                victimFrame = emptyIdx;
+                frames[emptyIdx] = page;
+                fifoQueue.push(page);
+                reason =
+                  "Free frame available (frame " +
+                  (emptyIdx + 1) +
+                  "); load page " +
+                  page +
+                  ".";
+              } else if (algo === "fifo") {
+                replaced = fifoQueue.shift();
+                victimFrame = frames.indexOf(replaced);
+                frames[victimFrame] = page;
+                fifoQueue.push(page);
+                reason =
+                  "Replace page " + replaced + " (oldest in memory, FIFO).";
+              } else if (algo === "lru") {
+                var lruPage = null,
+                  lruTime = Infinity;
+                for (var f = 0; f < frames.length; f++) {
+                  var p = frames[f];
+                  var lu = lastUsed.hasOwnProperty(p) ? lastUsed[p] : -1;
+                  if (lu < lruTime) {
+                    lruTime = lu;
+                    lruPage = p;
+                  }
+                }
+                replaced = lruPage;
+                victimFrame = frames.indexOf(replaced);
+                frames[victimFrame] = page;
+                var idxInQ = fifoQueue.indexOf(replaced);
+                if (idxInQ !== -1) fifoQueue.splice(idxInQ, 1);
+                fifoQueue.push(page);
+                reason =
+                  "Replace page " +
+                  replaced +
+                  " (least recently used; last used at t = " +
+                  (lruTime + 1) +
+                  ").";
+              } else {
+                // optimal
+                var bestFrame = -1,
+                  bestNext = -2;
+                for (var f2 = 0; f2 < frames.length; f2++) {
+                  var p2 = frames[f2];
+                  var nu = nextUse(refs, t, p2);
+                  if (
+                    bestFrame === -1 ||
+                    nu > bestNext ||
+                    (nu === bestNext && f2 < bestFrame)
+                  ) {
+                    bestFrame = f2;
+                    bestNext = nu;
+                  }
+                }
+                victimFrame = bestFrame;
+                replaced = frames[victimFrame];
+                frames[victimFrame] = page;
+                var iq = fifoQueue.indexOf(replaced);
+                if (iq !== -1) fifoQueue.splice(iq, 1);
+                fifoQueue.push(page);
+                if (bestNext === Infinity) {
+                  reason =
+                    "Replace page " +
+                    replaced +
+                    " in frame " +
+                    (victimFrame + 1) +
+                    " (never used again; lowest-numbered frame among ties).";
+                } else {
+                  reason =
+                    "Replace page " +
+                    replaced +
+                    " in frame " +
+                    (victimFrame + 1) +
+                    " (next use is farthest, at t = " +
+                    (bestNext + 1) +
+                    ").";
+                }
+              }
+              lastUsed[page] = t;
+            }
+
+            steps.push({
+              ref: page,
+              frames: cloneFrames(frames),
+              hit: hit,
+              fault: !hit,
+              replaced: replaced,
+              reason: reason,
+            });
+          }
+
+          return {
+            steps: steps,
+            faults: faults,
+            hits: refs.length - faults,
+            refs: refs,
+            frameCount: frameCount,
+            algo: algo,
+          };
+        }
+
+        function generateRefs(len) {
+          // Use pages 1-9 so up to 6 frames can still force replacements/hits in all algos.
+          var maxPage = 9;
+          var refs = [];
+          for (var i = 0; i < len; i++) {
+            var p;
+            do {
+              p = randInt(1, maxPage);
+            } while (i > 0 && p === refs[i - 1]);
+            refs.push(p);
+          }
+          return refs;
+        }
+
+        function hasGoodMix(refs, frames) {
+          var keys = ["fifo", "lru", "optimal"];
+          for (var i = 0; i < keys.length; i++) {
+            var r = simulate(refs, frames, keys[i]);
+            if (r.hits < 1) return false;
+            if (r.faults <= frames) return false; // ensure at least one eviction happened
+          }
+          return true;
+        }
+
+        function generateProblem(len, frames) {
+          for (var attempt = 0; attempt < 400; attempt++) {
+            var refs = generateRefs(len);
+            if (len <= 8 || hasGoodMix(refs, frames)) return refs;
+          }
+          // fallback: ensure some repeats
+          var fb = generateRefs(len);
+          if (len >= 4) {
+            fb[3] = fb[0];
+            if (len >= 6) fb[5] = fb[1];
+          }
+          return fb;
+        }
+
+        function parseCustomRefs(str) {
+          var parts = String(str)
+            .split(/[\s,]+/)
+            .filter(function (s) {
+              return s.length > 0;
+            });
+          if (parts.length < 2)
+            return { error: "Enter at least 2 page references." };
+          if (parts.length > 30)
+            return { error: "Use at most 30 page references." };
+          var refs = [];
+          for (var i = 0; i < parts.length; i++) {
+            if (!/^\d+$/.test(parts[i]))
+              return {
+                error: '"' + parts[i] + '" is not a valid page number.',
+              };
+            var n = parseInt(parts[i], 10);
+            if (n < 1 || n > 99)
+              return { error: "Page numbers must be between 1 and 99." };
+            refs.push(n);
+          }
+          return { refs: refs };
+        }
+
+        function fmtRatio(hits, total) {
+          var pct = (hits / total) * 100;
+          var s = (Math.round(pct * 10) / 10).toFixed(1).replace(/\.0$/, "");
+          return hits + "/" + total + " (" + s + "%)";
+        }
+
+        function parseRatioInput(raw, total, hits) {
+          var s = String(raw == null ? "" : raw).trim();
+          if (s === "") return NaN;
+          var m;
+          m = s.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+          if (m) {
+            var den = parseFloat(m[2]);
+            if (!den) return NaN;
+            return parseFloat(m[1]) / den;
+          }
+          m = s.match(/^(\d+(?:\.\d+)?)\s*%$/);
+          if (m) return parseFloat(m[1]) / 100;
+          if (/^\d+(?:\.\d+)?$/.test(s)) {
+            var v = parseFloat(s);
+            // accept 0.xx or percentage form like 16.7
+            if (v > 1) return v / 100;
+            return v;
+          }
+          return NaN;
+        }
+        /* PURE-END */
+
+        var state = {
+          algo: "lru",
+          frames: 3,
+          refLen: 12,
+          refs: EXAMPLE_REFS.slice(),
+          frameInputs: [],
+          resInputs: [],
+          faultsIn: "",
+          ratioIn: "",
+          solution: null,
+          submitted: false,
+          revealed: false,
+        };
+
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+        var el = {};
+
+        function esc(s) {
+          return String(s).replace(/[&<>"']/g, function (c) {
+            return {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c];
+          });
+        }
+
+        function resetInputs() {
+          state.frameInputs = [];
+          for (var f = 0; f < state.frames; f++) {
+            var row = [];
+            for (var t = 0; t < state.refs.length; t++) row.push("");
+            state.frameInputs.push(row);
+          }
+          state.resInputs = [];
+          for (var j = 0; j < state.refs.length; j++) state.resInputs.push("");
+          state.faultsIn = "";
+          state.ratioIn = "";
+          state.submitted = false;
+          state.revealed = false;
+        }
+
+        function recompute() {
+          state.solution = simulate(state.refs, state.frames, state.algo);
+        }
+
+        function renderChips() {
+          el.algoChips.innerHTML = Object.keys(ALGOS)
+            .map(function (k) {
+              return (
+                '<button type="button" class="chip' +
+                (state.algo === k ? " on" : "") +
+                '" data-algo="' +
+                k +
+                '">' +
+                esc(ALGOS[k].label) +
+                "</button>"
+              );
+            })
+            .join("");
+
+          el.frameChips.innerHTML = [3, 4, 5, 6]
+            .map(function (n) {
+              return (
+                '<button type="button" class="chip' +
+                (state.frames === n ? " on" : "") +
+                '" data-frames="' +
+                n +
+                '">' +
+                n +
+                "</button>"
+              );
+            })
+            .join("");
+
+          el.lenChips.innerHTML = [8, 12, 16, 20]
+            .map(function (n) {
+              return (
+                '<button type="button" class="chip' +
+                (state.refLen === n ? " on" : "") +
+                '" data-len="' +
+                n +
+                '">' +
+                n +
+                "</button>"
+              );
+            })
+            .join("");
+        }
+
+        function renderGiven() {
+          var algoRule = ALGOS[state.algo].rule;
+          if (state.algo === "optimal") {
+            algoRule +=
+              ' <span class="muted">(Scan forward from the current reference.)</span>';
+          }
+          el.ruleNote.innerHTML = algoRule;
+          el.givenText.innerHTML =
+            "A system has <b>" +
+            state.frames +
+            "</b> page frame" +
+            (state.frames === 1 ? "" : "s") +
+            ", initially empty, and the following page reference string of length <b>" +
+            state.refs.length +
+            "</b>:";
+          el.refStrip.innerHTML = state.refs
+            .map(function (r, i) {
+              return (
+                '<span class="ref-chip" title="t = ' +
+                (i + 1) +
+                '"><b>' +
+                (i + 1) +
+                "</b>" +
+                r +
+                "</span>"
+              );
+            })
+            .join("");
+        }
+
+        function renderTrace() {
+          var head = '<thead><tr><th class="rowhdr">Reference</th>';
+          state.refs.forEach(function (r, i) {
+            head += '<th class="refh">' + r + "</th>";
+          });
+          head += "</tr></thead>";
+
+          var body = "<tbody>";
+          for (var f = 0; f < state.frames; f++) {
+            body += '<tr><th class="rowhdr">Frame ' + (f + 1) + "</th>";
+            for (var t = 0; t < state.refs.length; t++) {
+              var v = state.frameInputs[f][t] || "";
+              body +=
+                '<td class="tcell" data-kind="frame" data-f="' +
+                f +
+                '" data-t="' +
+                t +
+                '">' +
+                '<input class="t-in" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="2" ' +
+                'data-kind="frame" data-f="' +
+                f +
+                '" data-t="' +
+                t +
+                '" value="' +
+                esc(v) +
+                '" aria-label="Frame ' +
+                (f + 1) +
+                " at t " +
+                (t + 1) +
+                '">' +
+                '<span class="sol" hidden></span></td>';
+            }
+            body += "</tr>";
+          }
+          body += '<tr class="res-row"><th class="rowhdr">Result</th>';
+          for (var j = 0; j < state.refs.length; j++) {
+            var rv = state.resInputs[j] || "";
+            body +=
+              '<td class="tcell rescell" data-kind="res" data-t="' +
+              j +
+              '">' +
+              '<input class="t-in res-in" type="text" autocomplete="off" spellcheck="false" maxlength="1" ' +
+              'data-kind="res" data-t="' +
+              j +
+              '" value="' +
+              esc(rv) +
+              '" aria-label="Result at t ' +
+              (j + 1) +
+              '">' +
+              '<span class="sol" hidden></span></td>';
+          }
+          body += "</tr></tbody>";
+
+          el.traceTable.innerHTML = head + body;
+        }
+
+        function renderTotalsInputs() {
+          el.faultsIn.value = state.faultsIn || "";
+          el.ratioIn.value = state.ratioIn || "";
+          el.faultsSol.textContent = "";
+          el.faultsSol.hidden = true;
+          el.ratioSol.textContent = "";
+          el.ratioSol.hidden = true;
+          el.faultsIn.classList.remove("ok", "bad");
+          el.ratioIn.classList.remove("ok", "bad");
+        }
+
+        function hideSolution() {
+          el.solutionPanel.hidden = true;
+          el.solCompare.innerHTML = "";
+          el.solTable.innerHTML = "";
+          el.solTotals.innerHTML = "";
+          el.whyList.innerHTML = "";
+        }
+
+        function renderSolution() {
+          var sol = state.solution;
+          var all = {
+            FIFO: simulate(state.refs, state.frames, "fifo"),
+            Optimal: simulate(state.refs, state.frames, "optimal"),
+            LRU: simulate(state.refs, state.frames, "lru"),
+          };
+          el.solCompare.innerHTML =
+            '<span class="pill mid">Faults: FIFO ' +
+            all.FIFO.faults +
+            "</span>" +
+            '<span class="pill mid">Optimal ' +
+            all.Optimal.faults +
+            "</span>" +
+            '<span class="pill mid">LRU ' +
+            all.LRU.faults +
+            "</span>";
+
+          var head = '<thead><tr><th class="rowhdr">Reference</th>';
+          state.refs.forEach(function (r) {
+            head += '<th class="refh">' + r + "</th>";
+          });
+          head += "</tr></thead><tbody>";
+          for (var f = 0; f < state.frames; f++) {
+            head += '<tr><th class="rowhdr">Frame ' + (f + 1) + "</th>";
+            for (var t = 0; t < sol.steps.length; t++) {
+              var val = sol.steps[t].frames[f];
+              head +=
+                '<td class="sval' +
+                (val == null ? " empty" : "") +
+                '">' +
+                (val == null ? "&ndash;" : val) +
+                "</td>";
+            }
+            head += "</tr>";
+          }
+          head += '<tr class="res-row"><th class="rowhdr">Result</th>';
+          for (var j = 0; j < sol.steps.length; j++) {
+            var fh = sol.steps[j].fault ? "F" : "H";
+            head +=
+              '<td class="sres ' +
+              (sol.steps[j].fault ? "sf" : "sh") +
+              '">' +
+              fh +
+              "</td>";
+          }
+          head += "</tr></tbody>";
+          el.solTable.innerHTML = head;
+
+          var faultRate = (sol.faults / state.refs.length) * 100;
+          var frs = (Math.round(faultRate * 10) / 10)
+            .toFixed(1)
+            .replace(/\.0$/, "");
+          el.solTotals.innerHTML =
+            '<div class="pill good">' +
+            sol.faults +
+            " page faults</div>" +
+            '<div class="pill mid">' +
+            sol.hits +
+            " hits</div>" +
+            '<div class="pill mid">Hit ratio ' +
+            fmtRatio(sol.hits, state.refs.length) +
+            "</div>" +
+            '<div class="pill mid">Fault rate ' +
+            frs +
+            "%</div>";
+
+          el.whyList.innerHTML = sol.steps
+            .map(function (st, i) {
+              return (
+                "<li><b>t=" +
+                (i + 1) +
+                ", page " +
+                st.ref +
+                ":</b> " +
+                esc(st.reason) +
+                "</li>"
+              );
+            })
+            .join("");
+        }
+
+        function normalizeFrameInput(v) {
+          var s = String(v == null ? "" : v).trim();
+          if (s === "" || s === "-" || s === "\u2013" || s === "\u2014")
+            return null;
+          if (!/^\d+$/.test(s)) return "bad";
+          return parseInt(s, 10);
+        }
+
+        function grade() {
+          var sol = state.solution;
+          var frameOk = 0,
+            frameTotal = state.frames * state.refs.length;
+          var resOk = 0,
+            resTotal = state.refs.length;
+          var totalOk = 0,
+            totalTotal = 2;
+
+          // grade frame cells
+          for (var f = 0; f < state.frames; f++) {
+            for (var t = 0; t < state.refs.length; t++) {
+              var cell = el.traceTable.querySelector(
+                'td[data-kind="frame"][data-f="' + f + '"][data-t="' + t + '"]',
+              );
+              if (!cell) continue;
+              var inp = cell.querySelector("input");
+              var solSpan = cell.querySelector(".sol");
+              var expected = sol.steps[t].frames[f]; // number or null
+              var got = normalizeFrameInput(inp.value);
+              var ok = got !== "bad" && got === expected;
+              if (ok) frameOk++;
+              inp.classList.toggle("ok", state.submitted && ok);
+              inp.classList.toggle("bad", state.submitted && !ok);
+              if (state.revealed && !ok) {
+                solSpan.textContent =
+                  "= " + (expected == null ? "\u2013" : expected);
+                solSpan.hidden = false;
+              } else {
+                solSpan.textContent = "";
+                solSpan.hidden = true;
+              }
+            }
+          }
+
+          // grade result cells
+          for (var j = 0; j < state.refs.length; j++) {
+            var rcell = el.traceTable.querySelector(
+              'td[data-kind="res"][data-t="' + j + '"]',
+            );
+            if (!rcell) continue;
+            var rinp = rcell.querySelector("input");
+            var rsol = rcell.querySelector(".sol");
+            var expFH = sol.steps[j].fault ? "F" : "H";
+            var g = String(rinp.value || "")
+              .trim()
+              .toUpperCase();
+            var rok = g === expFH;
+            if (rok) resOk++;
+            rinp.classList.toggle("ok", state.submitted && rok);
+            rinp.classList.toggle("bad", state.submitted && !rok);
+            if (state.revealed && !rok) {
+              rsol.textContent = "= " + expFH;
+              rsol.hidden = false;
+            } else {
+              rsol.textContent = "";
+              rsol.hidden = true;
+            }
+          }
+
+          // totals
+          var fGot = String(state.faultsIn || "").trim();
+          var fNum = fGot === "" ? NaN : Number(fGot);
+          var faultsOk = isFinite(fNum) && fNum === sol.faults;
+          if (faultsOk) totalOk++;
+          el.faultsIn.classList.toggle("ok", state.submitted && faultsOk);
+          el.faultsIn.classList.toggle("bad", state.submitted && !faultsOk);
+          if (state.revealed && !faultsOk) {
+            el.faultsSol.textContent = "= " + sol.faults;
+            el.faultsSol.hidden = false;
+          } else {
+            el.faultsSol.textContent = "";
+            el.faultsSol.hidden = true;
+          }
+
+          var ratioGot = parseRatioInput(
+            state.ratioIn,
+            state.refs.length,
+            sol.hits,
+          );
+          var ratioExp = sol.hits / state.refs.length;
+          var ratioOk =
+            isFinite(ratioGot) && Math.abs(ratioGot - ratioExp) <= 0.0011; // ~0.1% tolerance
+          if (ratioOk) totalOk++;
+          el.ratioIn.classList.toggle("ok", state.submitted && ratioOk);
+          el.ratioIn.classList.toggle("bad", state.submitted && !ratioOk);
+          if (state.revealed && !ratioOk) {
+            el.ratioSol.textContent =
+              "= " + fmtRatio(sol.hits, state.refs.length);
+            el.ratioSol.hidden = false;
+          } else {
+            el.ratioSol.textContent = "";
+            el.ratioSol.hidden = true;
+          }
+
+          var gotPoints = frameOk + resOk + totalOk;
+          var allPoints = frameTotal + resTotal + totalTotal;
+          var pct = Math.round((gotPoints / allPoints) * 100);
+
+          if (state.submitted) {
+            function pill(cls, text) {
+              return '<span class="pill ' + cls + '">' + text + "</span>";
+            }
+            function cls(ok, tot) {
+              return ok === tot ? "good" : ok === 0 ? "bad" : "mid";
+            }
+            el.score.innerHTML =
+              pill(pct === 100 ? "good" : pct < 50 ? "bad" : "mid", pct + "%") +
+              pill(
+                cls(frameOk, frameTotal),
+                "Frames " + frameOk + "/" + frameTotal,
+              ) +
+              pill(cls(resOk, resTotal), "F/H " + resOk + "/" + resTotal) +
+              pill(
+                cls(totalOk, totalTotal),
+                "Totals " + totalOk + "/" + totalTotal,
+              );
+          } else {
+            el.score.innerHTML = "";
+          }
+        }
+
+        function clearMarks() {
+          el.traceTable.querySelectorAll(".t-in").forEach(function (n) {
+            n.classList.remove("ok", "bad");
+          });
+          el.traceTable.querySelectorAll(".tcell .sol").forEach(function (n) {
+            n.textContent = "";
+            n.hidden = true;
+          });
+          el.faultsIn.classList.remove("ok", "bad");
+          el.ratioIn.classList.remove("ok", "bad");
+          el.faultsSol.textContent = "";
+          el.faultsSol.hidden = true;
+          el.ratioSol.textContent = "";
+          el.ratioSol.hidden = true;
+          el.score.innerHTML = "";
+        }
+
+        function submit() {
+          state.submitted = true;
+          grade();
+        }
+        function retry() {
+          state.submitted = false;
+          state.revealed = false;
+          hideSolution();
+          clearMarks();
+        }
+        function showSolution() {
+          state.submitted = true;
+          state.revealed = true;
+          renderSolution();
+          el.solutionPanel.hidden = false;
+          grade();
+        }
+
+        function renderAll() {
+          renderChips();
+          renderGiven();
+          renderTrace();
+          renderTotalsInputs();
+          hideSolution();
+          clearMarks();
+        }
+
+        function newProblem(keepRefs) {
+          if (!keepRefs) {
+            state.refs = generateProblem(state.refLen, state.frames);
+            state.refLen = state.refs.length;
+          }
+          recompute();
+          resetInputs();
+          renderAll();
+        }
+
+        function loadExample() {
+          state.algo = "lru";
+          state.frames = 3;
+          state.refLen = EXAMPLE_REFS.length;
+          state.refs = EXAMPLE_REFS.slice();
+          recompute();
+          resetInputs();
+          renderAll();
+        }
+
+        function applyCustom() {
+          var parsed = parseCustomRefs(el.customRefs.value);
+          var fstr = String(el.customFrames.value || "").trim();
+          var fnum = parseInt(fstr, 10);
+          if (parsed.error) {
+            el.customMsg.textContent = parsed.error;
+            el.customMsg.className = "custom-msg bad";
+            return;
+          }
+          if (!/^\d+$/.test(fstr) || fnum < 1 || fnum > 10) {
+            el.customMsg.textContent = "Frames must be a number from 1 to 10.";
+            el.customMsg.className = "custom-msg bad";
+            return;
+          }
+          state.refs = parsed.refs;
+          state.refLen = parsed.refs.length;
+          state.frames = fnum;
+          el.customMsg.textContent =
+            "Loaded " +
+            parsed.refs.length +
+            " references with " +
+            fnum +
+            " frame" +
+            (fnum === 1 ? "" : "s") +
+            ".";
+          el.customMsg.className = "custom-msg good";
+          recompute();
+          resetInputs();
+          renderAll();
+        }
+
+        function focusCell(kind, f, t) {
+          var sel =
+            kind === "res"
+              ? 'input[data-kind="res"][data-t="' + t + '"]'
+              : 'input[data-kind="frame"][data-f="' +
+                f +
+                '"][data-t="' +
+                t +
+                '"]';
+          var n = el.traceTable.querySelector(sel);
+          if (n) {
+            n.focus();
+            try {
+              n.select();
+            } catch (e) {}
+          }
+        }
+
+        function moveNext(kind, f, t) {
+          if (kind === "frame") {
+            if (f < state.frames - 1) focusCell("frame", f + 1, t);
+            else focusCell("res", 0, t);
+          } else {
+            if (t < state.refs.length - 1) focusCell("frame", 0, t + 1);
+            else {
+              el.faultsIn.focus();
+              try {
+                el.faultsIn.select();
+              } catch (e) {}
+            }
+          }
+        }
+
+        function movePrev(kind, f, t) {
+          if (kind === "frame") {
+            if (f > 0) focusCell("frame", f - 1, t);
+            else if (t > 0) focusCell("res", 0, t - 1);
+          } else {
+            focusCell("frame", state.frames - 1, t);
+          }
+        }
+
+        function moveVertical(kind, f, t, dir) {
+          if (kind === "frame") {
+            var nf = f + dir;
+            if (nf >= 0 && nf < state.frames) focusCell("frame", nf, t);
+            else if (nf >= state.frames) focusCell("res", 0, t);
+          } else {
+            if (dir < 0) focusCell("frame", state.frames - 1, t);
+          }
+        }
+
+        function moveHorizontal(kind, f, t, dir) {
+          var nt = t + dir;
+          if (nt < 0 || nt >= state.refs.length) return;
+          focusCell(kind, f, nt);
+        }
+
+        function bind() {
+          el = {
+            algoChips: $("algoChips"),
+            frameChips: $("frameChips"),
+            lenChips: $("lenChips"),
+            newBtn: $("newBtn"),
+            exampleBtn: $("exampleBtn"),
+            customToggle: $("customToggle"),
+            customPanel: $("customPanel"),
+            customRefs: $("customRefs"),
+            customFrames: $("customFrames"),
+            customApply: $("customApply"),
+            customCancel: $("customCancel"),
+            customMsg: $("customMsg"),
+            ruleNote: $("ruleNote"),
+            givenText: $("givenText"),
+            refStrip: $("refStrip"),
+            traceTable: $("traceTable"),
+            faultsIn: $("faultsIn"),
+            ratioIn: $("ratioIn"),
+            faultsSol: $("faultsSol"),
+            ratioSol: $("ratioSol"),
+            solutionPanel: $("solutionPanel"),
+            solCompare: $("solCompare"),
+            solTable: $("solTable"),
+            solTotals: $("solTotals"),
+            whyList: $("whyList"),
+            score: $("score"),
+            submitBtn: $("submitBtn"),
+            retryBtn: $("retryBtn"),
+            revealBtn: $("revealBtn"),
+          };
+
+          el.algoChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-algo]");
+            if (!b) return;
+            var a = b.dataset.algo;
+            if (a === state.algo) return;
+            state.algo = a;
+            recompute();
+            resetInputs();
+            renderAll();
+          });
+          el.frameChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-frames]");
+            if (!b) return;
+            var n = parseInt(b.dataset.frames, 10);
+            if (n === state.frames) return;
+            state.frames = n;
+            recompute();
+            resetInputs();
+            renderAll();
+          });
+          el.lenChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-len]");
+            if (!b) return;
+            var n = parseInt(b.dataset.len, 10);
+            if (n === state.refLen) return;
+            state.refLen = n;
+            newProblem(false);
+          });
+
+          el.newBtn.addEventListener("click", function () {
+            newProblem(false);
+          });
+          el.exampleBtn.addEventListener("click", loadExample);
+          el.customToggle.addEventListener("click", function () {
+            var show = el.customPanel.hidden;
+            el.customPanel.hidden = !show;
+            el.customToggle.classList.toggle("on", show);
+            if (show) el.customRefs.focus();
+          });
+          el.customCancel.addEventListener("click", function () {
+            el.customPanel.hidden = true;
+            el.customToggle.classList.remove("on");
+          });
+          el.customApply.addEventListener("click", applyCustom);
+
+          el.traceTable.addEventListener("input", function (e) {
+            var inp = e.target.closest(".t-in");
+            if (!inp) return;
+            var kind = inp.dataset.kind,
+              t = parseInt(inp.dataset.t, 10);
+            if (kind === "frame") {
+              var f = parseInt(inp.dataset.f, 10);
+              inp.value = inp.value.replace(/[^\d\-–—]/g, "").slice(0, 2);
+              state.frameInputs[f][t] = inp.value;
+            } else {
+              inp.value = inp.value
+                .replace(/[^fFhH]/g, "")
+                .toUpperCase()
+                .slice(0, 1);
+              state.resInputs[t] = inp.value;
+            }
+            if (state.submitted) grade();
+          });
+
+          el.traceTable.addEventListener("keydown", function (e) {
+            var inp = e.target.closest(".t-in");
+            if (!inp) return;
+            var kind = inp.dataset.kind,
+              t = parseInt(inp.dataset.t, 10);
+            var f = kind === "frame" ? parseInt(inp.dataset.f, 10) : 0;
+            if (e.key === "Enter") {
+              e.preventDefault();
+              moveNext(kind, f, t);
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              moveVertical(kind, f, t, 1);
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              moveVertical(kind, f, t, -1);
+            } else if (
+              e.key === "ArrowRight" &&
+              inp.selectionStart === inp.value.length
+            ) {
+              e.preventDefault();
+              moveHorizontal(kind, f, t, 1);
+            } else if (e.key === "ArrowLeft" && inp.selectionStart === 0) {
+              e.preventDefault();
+              moveHorizontal(kind, f, t, -1);
+            }
+          });
+
+          el.traceTable.addEventListener("focusin", function (e) {
+            var inp = e.target.closest(".t-in");
+            if (!inp) return;
+            setTimeout(function () {
+              try {
+                inp.select();
+              } catch (err) {}
+            }, 0);
+          });
+
+          function onTotalInput(which) {
+            return function () {
+              if (which === "faults") {
+                el.faultsIn.value = el.faultsIn.value
+                  .replace(/\D/g, "")
+                  .slice(0, 3);
+                state.faultsIn = el.faultsIn.value;
+              } else {
+                el.ratioIn.value = el.ratioIn.value
+                  .replace(/[^\d\.\/%]/g, "")
+                  .slice(0, 8);
+                state.ratioIn = el.ratioIn.value;
+              }
+              if (state.submitted) grade();
+            };
+          }
+          el.faultsIn.addEventListener("input", onTotalInput("faults"));
+          el.ratioIn.addEventListener("input", onTotalInput("ratio"));
+          el.faultsIn.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              el.ratioIn.focus();
+            }
+          });
+          el.ratioIn.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submit();
+            }
+          });
+
+          el.submitBtn.addEventListener("click", submit);
+          el.retryBtn.addEventListener("click", retry);
+          el.revealBtn.addEventListener("click", showSolution);
+        }
+
+        bind();
+        loadExample();
+      })();
+    </script>
+  </body>
+</html>

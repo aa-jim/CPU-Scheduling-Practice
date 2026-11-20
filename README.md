@@ -1,12 +1,17 @@
-# CPU Scheduling &amp; Banker&rsquo;s Algorithm Practice
+# CPU Scheduling, Banker&rsquo;s Algorithm &amp; Page Replacement Practice
 
-Two small, dependency-free practice pages for operating-systems exercises:
+Four small, dependency-free practice pages for operating-systems exercises:
 
 - **`index.html`** &mdash; CPU scheduling: build the Gantt chart, fill in the metrics
   table, and get graded instantly.
 - **`bankers.html`** &mdash; Banker&rsquo;s algorithm: compute each process&rsquo;s current need,
   carry the available vector forward, and find a safe sequence (or show that the
   state is unsafe).
+- **`deadlock.html`** &mdash; resource allocation and wait-for graphs: type the
+  allocation and request matrices, then hand-draw both graphs and get each arrow
+  marked, plus the deadlock verdict.
+- **`paging.html`** &mdash; page replacement: trace page frames through a reference string
+  for FIFO, Optimal and LRU, mark faults and hits, and compute the hit ratio.
 
 ## Features
 
@@ -58,15 +63,66 @@ Two small, dependency-free practice pages for operating-systems exercises:
 - **Keyboard friendly** — `Enter` walks across the need cells, then through the order
   slots, then through the availability cells; it submits from the last one.
 
-Both pages need **no build step and no dependencies** — just an HTML file and the
-shared stylesheet.
+### Deadlock graphs page
+
+- **Editable matrices** in the exam layout: `Allocated` and `Requested` columns for
+  every process, plus an editable total-instance count per resource.
+- **You draw the graphs.** Both canvases start empty: click a process then a resource
+  to add a request (dashed), or a resource then a process to add an assignment (solid,
+  attached to an instance dot). Click the pair again, or the arrow itself, to remove it.
+- **Separate Wait-For canvas.** Click `Pi` then `Pj` for every wait; a process cannot
+  wait for itself, and each pair is drawn once.
+- **Resource boxes carry the given data** &mdash; one dot per instance, filled for the
+  copies that are allocated and hollow for the free ones, independent of what you draw.
+- **Arrow-level marking** &mdash; submit to turn correct arrows green, wrong ones red,
+  and show the arrows you missed as green dashed ghosts. Pills report `RAG a/b`,
+  `WFG c/d`, the verdict and an overall percentage.
+- **Data validation** — impossible tables (more instances allocated than exist, a
+  request larger than the resource, a zero-instance resource) are rejected cell by
+  cell, and the canvases stay disabled until the numbers are consistent.
+- **Verdict checking** — pick *Deadlock* or *No deadlock*, and get the reduction order,
+  the stuck processes, their blocked requests and the cycle with a worked justification.
+- **Random problems** with 3–5 processes, 2–3 resources and 1 or 2 instances each,
+  in three flavours: *Random mix*, *Always deadlock*, *Never deadlock*.
+
+### Page replacement page
+
+- **Three algorithms** &mdash; FIFO, Optimal and LRU.
+- **Configurable problems** &mdash; 3&ndash;6 page frames and reference strings of 8, 12,
+  16 or 20 pages (default 3 frames / 12 references).
+- **Random problems, the textbook example, or your own string** &mdash; *New problem*
+  generates a fresh string, *Load the example* loads 3 frames with
+  `1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5`, and *Enter your own* lets you paste any
+  reference string (2&ndash;30 pages, values 1&ndash;99) with 1&ndash;10 frames.
+- **Step-by-step workflow** &mdash; fill the full frame trace and the F/H result row,
+  then enter the totals.
+- **Full trace table** &mdash; one column per reference: type every frame&rsquo;s contents
+  after each step, and mark each step <b>F</b> (page fault) or <b>H</b> (hit). Use a
+  blank or `&ndash;` for an empty frame. Row labels stay sticky and long strings scroll
+  horizontally.
+- **Totals step** &mdash; enter the total page faults and the hit ratio (a percentage
+  like `16.7` or a fraction like `2/12`), both graded.
+- **Compare on the same string** &mdash; switching the algorithm or the frame count keeps
+  the current reference string and clears your answers, so you can compare FIFO, LRU and
+  Optimal on the same problem; changing the length or pressing *New problem* draws a new one.
+- **Instant grading** &mdash; wrong frame and F/H cells turn red, correct ones green, and
+  score pills report `Frames`, `F/H`, `Totals` and an overall percentage.
+- **Show answer** reveals the correct trace table (reference row highlighted, faults in
+  orange and hits in green), the faults/hits/hit ratio/fault rate, a fault-count comparison
+  across FIFO/Optimal/LRU for the current string, and a collapsible &ldquo;why each page was
+  replaced&rdquo; explanation.
+- **Keyboard friendly** &mdash; `Enter` moves down a column (Frame 1 &rarr; &hellip; &rarr;
+  Result) then to the next column, and submits from the last field.
+
+All four pages need **no build step and no dependencies** &mdash; just an HTML file and
+the shared stylesheet.
 
 ## How to use
 
 1. Download or clone the repository.
-2. Open `index.html` (or `bankers.html`) in any modern browser — double-clicking it is
-   enough, there is no server or build step. The pill-shaped navigation at the top
-   switches between the two pages.
+2. Open `index.html`, `bankers.html`, `deadlock.html`, or `paging.html` in any modern
+   browser — double-clicking it is enough, there is no server or build step. The
+   pill-shaped navigation at the top switches between the four pages.
 
 ### CPU scheduling
 
@@ -100,6 +156,44 @@ shared stylesheet.
 7. Press **Submit** to grade, **Try again** to clear the marks, or **Show answer** to
    see the full solution.
 
+### Deadlock graphs
+
+1. Pick a **problem type**, the number of **processes**, the number of **resources**
+   and how many **instances** each resource has, or press **New problem** for fresh
+   data.
+2. Type the exam table: `Allocated` is what each process already holds, `Requested`
+   is what it is still waiting for. Edit the total instance count above the table if
+   the question gives mixed counts (say `R1` has 1 and `R2` has 2). A red message
+   under the totals means the table cannot exist &mdash; fix the red cells first.
+3. **Step 1 — draw the Resource Allocation Graph.** Click a process, then a resource
+   it requests (dashed arrow). Click a resource, then a process holding a copy of it
+   (solid arrow from an instance dot). Click an arrow or repeat a pair to remove it.
+4. **Step 2 — draw the Wait-For Graph.** Click the process that waits, then the
+   process it waits for. Decide each edge from the free-instance counts: a request the
+   free copies can satisfy is granted and creates no wait arrow.
+5. **Step 3 — choose Deadlock or No deadlock**, then press **Submit**. Correct arrows
+   turn green, wrong ones red, missed ones appear as green dashed ghosts, and the score
+   pills break the result down by graph and verdict.
+6. **Try again** clears the marks but keeps your drawing. **Show answer** overlays the
+   answer key and spells out the reduction order, the stuck processes and the cycle.
+   Editing the table or changing the problem settings starts the drawing over.
+
+### Page replacement
+
+1. Pick an **algorithm** (FIFO, Optimal or LRU), the number of **frames** (3&ndash;6) and
+   the **reference** string length (8, 12, 16 or 20), or press **New problem** for fresh
+   data. **Load the example** loads the textbook 3-frame string; **Enter your own** lets
+   you paste any string (2&ndash;30 pages, 1&ndash;99) and choose 1&ndash;10 frames.
+2. **Step 1 — trace the table.** For each column, type the contents of every frame after
+   that reference and mark **Result** as `F` (fault) or `H` (hit). Leave a cell blank or
+   type `&ndash;` when a frame is still empty.
+3. **Step 2 — results.** Enter the total page faults and the hit ratio (for example
+   `16.7%` or `2/12`).
+4. Press **Submit** to grade. **Try again** clears the marks but keeps your work, and
+   **Show answer** reveals the correct trace, totals and per-step explanations.
+5. To compare algorithms, switch FIFO/Optimal/LRU (or the frame count) on the same
+   string; changing the reference length or pressing *New problem* generates a new string.
+
 Notes:
 
 - Changing the algorithm on the scheduling page keeps the same process set and re-solves
@@ -113,6 +207,13 @@ Notes:
 - The Banker&rsquo;s score counts every need cell, every availability cell in the rows your
   order places, and one point for the order (a complete safe sequence or a proven unsafe
   state).
+- On the deadlock page, editing a cell, changing any chip, or pressing *New problem*
+  clears both drawings; *Try again* only clears the marks, and *Show answer* keeps your
+  arrows visible under the answer key.
+- On the page replacement page, the score counts every frame cell, every F/H cell and the
+  two totals. Switching the algorithm or frame count keeps the same reference string;
+  changing the length or pressing *New problem* draws a new one. A custom string replaces
+  the current problem and clears your answers.
 
 ## CPU scheduling rules used
 
@@ -151,6 +252,15 @@ time.
 - Safe sequences are not unique: in a safe state, any process that fits can safely run
   next, so several orders can be correct.
 
+### Page replacement
+
+| Value | Formula |
+| --- | --- |
+| Page faults | number of references where the page was not in any frame |
+| Hits | `references − page faults` |
+| Hit ratio | `hits / references` |
+| Fault rate | `page faults / references` |
+
 ## Banker&rsquo;s algorithm rules used
 
 - Problems with 4–6 processes and 3–4 resource types; every matrix entry is a
@@ -165,17 +275,54 @@ time.
 - The availability you type is checked against the completion order you wrote, so any
   valid safe sequence is graded as correct.
 
+## Deadlock graph rules used
+
+- `Available = Total − Σ Allocated`, per resource. The instance dots always show this
+  given data, not the arrows you draw.
+- A correct Resource Allocation Graph has one assignment arrow for every
+  `Allocated > 0` pair and one request arrow for every `Requested > 0` pair.
+- A request becomes a wait-for edge only when the free instances cannot satisfy it;
+  a request that fits is granted immediately, so that process is not waiting.
+- A process can finish when its whole request vector fits in the available vector; it
+  then releases everything it holds (the same reduction idea as Banker&rsquo;s).
+- If any process is left over, the state is deadlocked. A cycle is the classic
+  justification, but with multi-instance resources the cycle alone is not the test
+  &mdash; the free instances decide.
+- Impossible inputs &mdash; more copies allocated than exist, a request larger than the
+  resource, a resource with no instances &mdash; are rejected cell by cell, and the
+  canvases are disabled until the numbers are consistent.
+- The score counts the arrows of each graph and one point for the verdict; extra wrong
+  arrows lower the percentage.
+
+## Page replacement rules used
+
+- **FIFO** replaces the page that has been in memory the longest. A hit does not change
+  the load order.
+- **LRU** replaces the page whose last use is farthest in the past.
+- **Optimal** replaces the page whose next use is farthest in the future (or that is never
+  used again). **Tie rule:** if more than one loaded page is never used again, evict the
+  page in the lowest-numbered frame (so grading is unambiguous).
+- All frames start empty. A fault that finds a free frame loads the page into the first
+  empty frame; it is not a replacement. A hit leaves the frame contents unchanged.
+- Random problems use pages `1`&ndash;`9` with no back-to-back repeats and are checked to
+  include at least one hit and one eviction for all three algorithms (relaxed for very
+  short strings). Custom strings accept 2&ndash;30 page numbers from 1&ndash;99.
+
 ## Project structure
 
 ```
 index.html    scheduling page: markup, styles reference, all logic
 bankers.html  Banker's algorithm page: markup and all logic
-style.css     layout and component styling for both pages
+deadlock.html deadlock graphs page: markup, SVG drawing, all logic
+paging.html   page replacement page: markup and all logic
+style.css     layout and component styling for all pages
 README.md     this file
 ```
 
 Each page is self-contained and dependency-free. The pure logic in each file sits
 between `/* PURE-START */` and `/* PURE-END */` markers (`generateProcs` / `simulate`
-for scheduling, the vector helpers and problem generators for Banker&rsquo;s), so it can
-be extracted and tested without a DOM.
+for scheduling, the vector helpers and problem generators for Banker&rsquo;s,
+`analyse` / `findCycle` / `expectedRAG` / `expectedWFG` / `compareEdges` for the
+deadlock page, and `simulate` / `generateProblem` / `parseCustomRefs` for page
+replacement), so it can be extracted and tested without a DOM.
 

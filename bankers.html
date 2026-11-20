@@ -1,1030 +1,1336 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Banker&rsquo;s Algorithm Practice</title>
-<link rel="stylesheet" href="style.css" />
-</head>
-<body>
-<div class="wrap wide">
-  <header>
-    <nav class="nav" aria-label="Practice pages">
-      <a href="index.html">CPU Scheduling</a>
-      <a href="bankers.html" class="on" aria-current="page">Banker&rsquo;s Algorithm</a>
-    </nav>
-    <h1>Banker&rsquo;s Algorithm Practice</h1>
-    <p>Work out each process&rsquo;s current need, carry the available vector forward, and find a safe sequence &mdash; or show that none exists.</p>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Banker&rsquo;s Algorithm Practice</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap wide">
+      <header>
+        <nav class="nav" aria-label="Practice pages">
+          <a href="index.html">CPU Scheduling</a>
+          <a href="bankers.html" class="on" aria-current="page"
+            >Banker&rsquo;s Algorithm</a
+          >
+          <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+          <a href="paging.html">Page Replacement</a>
+        </nav>
+        <h1>Banker&rsquo;s Algorithm Practice</h1>
+        <p>
+          Work out each process&rsquo;s current need, carry the available vector
+          forward, and find a safe sequence &mdash; or show that none exists.
+        </p>
+      </header>
 
-  <section class="panel controls banker">
-    <div class="group">
-      <div class="glabel">Problem type</div>
-      <div class="chips" id="kindChips"></div>
-    </div>
-    <div class="group">
-      <div class="glabel">Processes</div>
-      <div class="chips" id="nChips"></div>
-    </div>
-    <div class="group">
-      <div class="glabel">Resource types</div>
-      <div class="chips" id="mChips"></div>
-    </div>
-    <div class="group">
-      <div class="glabel">In the question</div>
-      <div class="chips" id="dataChips"></div>
-    </div>
-    <div class="group">
-      <button class="btn" id="newBtn" type="button">&#8635; New problem</button>
-    </div>
-  </section>
+      <section class="panel controls banker">
+        <div class="group">
+          <div class="glabel">Problem type</div>
+          <div class="chips" id="kindChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Processes</div>
+          <div class="chips" id="nChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Resource types</div>
+          <div class="chips" id="mChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">In the question</div>
+          <div class="chips" id="dataChips"></div>
+        </div>
+        <div class="group">
+          <button class="btn" id="newBtn" type="button">
+            &#8635; New problem
+          </button>
+        </div>
+      </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Given data &amp; answer sheet</h2>
-      <span class="hint">Need = Max &minus; Allocated &middot; a row&rsquo;s Available is the vector when that process starts.</span>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Given data &amp; answer sheet</h2>
+          <span class="hint"
+            >Need = Max &minus; Allocated &middot; a row&rsquo;s Available is
+            the vector when that process starts.</span
+          >
+        </div>
+        <div class="vec-strip" id="availStrip"></div>
+        <div class="note sheet-note" id="dataNote"></div>
+        <div class="sol-block" id="solSeq" hidden></div>
+        <div class="table-wrap">
+          <table class="mat sheet" id="seqTable"></table>
+        </div>
+        <div class="order-box">
+          <div class="order-top">
+            <span class="glabel">Completion order</span>
+            <span class="hint"
+              >Type the process you finish at each step &mdash; <b>P2</b> or
+              <b>2</b>.</span
+            >
+          </div>
+          <div class="order-slots" id="orderSlots"></div>
+          <div class="order-foot">
+            <button class="btn verdict" id="verdictBtn" type="button">
+              No safe sequence exists
+            </button>
+            <span class="hint" id="seqLive"></span>
+          </div>
+        </div>
+      </section>
     </div>
-    <div class="vec-strip" id="availStrip"></div>
-    <div class="note sheet-note" id="dataNote"></div>
-    <div class="sol-block" id="solSeq" hidden></div>
-    <div class="table-wrap"><table class="mat sheet" id="seqTable"></table></div>
-    <div class="order-box">
-      <div class="order-top">
-        <span class="glabel">Completion order</span>
-        <span class="hint">Type the process you finish at each step &mdash; <b>P2</b> or <b>2</b>.</span>
+
+    <footer class="actions">
+      <div class="actions-inner">
+        <div class="score" id="score" aria-live="polite"></div>
+        <div class="btns">
+          <button class="btn primary" id="submitBtn" type="button">
+            Submit
+          </button>
+          <button class="btn" id="retryBtn" type="button">Try again</button>
+          <button class="btn" id="revealBtn" type="button">Show answer</button>
+        </div>
       </div>
-      <div class="order-slots" id="orderSlots"></div>
-      <div class="order-foot">
-        <button class="btn verdict" id="verdictBtn" type="button">No safe sequence exists</button>
-        <span class="hint" id="seqLive"></span>
-      </div>
-    </div>
-  </section>
-</div>
+    </footer>
+    <script>
+      (function () {
+        "use strict";
 
-<footer class="actions">
-  <div class="actions-inner">
-    <div class="score" id="score" aria-live="polite"></div>
-    <div class="btns">
-      <button class="btn primary" id="submitBtn" type="button">Submit</button>
-      <button class="btn" id="retryBtn" type="button">Try again</button>
-      <button class="btn" id="revealBtn" type="button">Show answer</button>
-    </div>
-  </div>
-</footer>
-<script>
-(function () {
-  'use strict';
+        /* PURE-START */
 
-  /* PURE-START */
-
-  function zeros(m) {
-    var a = [];
-    for (var i = 0; i < m; i++) a.push(0);
-    return a;
-  }
-
-  function randInt(min, max) {
-    return min + Math.floor(Math.random() * (max - min + 1));
-  }
-
-  function shuffle(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = randInt(0, i);
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
-
-  function rangeArr(n) {
-    var a = [];
-    for (var i = 0; i < n; i++) a.push(i);
-    return a;
-  }
-
-  function addVec(a, b) {
-    var o = [];
-    for (var i = 0; i < a.length; i++) o.push(a[i] + b[i]);
-    return o;
-  }
-
-  function sumVecs(list) {
-    var o = zeros(list.length ? list[0].length : 0);
-    for (var i = 0; i < list.length; i++) o = addVec(o, list[i]);
-    return o;
-  }
-
-  function leVec(a, b) {
-    for (var i = 0; i < a.length; i++) if (a[i] > b[i]) return false;
-    return true;
-  }
-
-  function allZero(v) {
-    for (var i = 0; i < v.length; i++) if (v[i] !== 0) return false;
-    return true;
-  }
-
-  function makeData(need, alloc, avail) {
-    var procs = need.map(function (nd, i) {
-      return {
-        pid: 'P' + i,
-        id: i,
-        need: nd.slice(),
-        alloc: alloc[i].slice(),
-        max: addVec(nd, alloc[i])
-      };
-    });
-    return { procs: procs, available: avail.slice(), total: addVec(sumVecs(alloc), avail) };
-  }
-
-  // In a safe state any feasible choice keeps the state safe, so a single
-  // greedy first-fit pass is enough to decide safety.
-  function greedy(procs, avail) {
-    var work = avail.slice();
-    var used = {};
-    var order = [];
-    var guard = 0;
-    while (guard++ <= procs.length) {
-      var pick = -1;
-      for (var i = 0; i < procs.length; i++) {
-        if (used[i]) continue;
-        if (leVec(procs[i].need, work)) { pick = i; break; }
-      }
-      if (pick < 0) break;
-      used[pick] = true;
-      order.push(procs[pick].pid);
-      work = addVec(work, procs[pick].alloc);
-    }
-    return { order: order, work: work, safe: order.length === procs.length };
-  }
-
-  // Build a safe problem backwards from a random order, so a solution exists.
-  function genSafe(n, m) {
-    for (var attempt = 0; attempt < 400; attempt++) {
-      var order = shuffle(rangeArr(n));
-      var avail = [];
-      for (var r = 0; r < m; r++) avail.push(randInt(0, 3));
-      if (allZero(avail)) avail[randInt(0, m - 1)] = randInt(1, 3);
-
-      var work = avail.slice();
-      var alloc = [];
-      var need = [];
-      var fits = true;
-
-      for (var k = 0; k < n; k++) {
-        var idx = order[k];
-        var a = [];
-        var nd = [];
-        for (r = 0; r < m; r++) {
-          a.push(randInt(0, 3));
-          nd.push(randInt(0, Math.min(work[r], 6)));
+        function zeros(m) {
+          var a = [];
+          for (var i = 0; i < m; i++) a.push(0);
+          return a;
         }
-        alloc[idx] = a;
-        need[idx] = nd;
-        work = addVec(work, a);
-        if (Math.max.apply(null, addVec(nd, a)) > 9) fits = false;
-      }
-      if (!fits) continue;
 
-      var blocked = 0;
-      var nonzero = false;
-      for (var i = 0; i < n; i++) {
-        if (!leVec(need[i], avail)) blocked++;
-        if (Math.max.apply(null, need[i]) > 0) nonzero = true;
-      }
-      if (!blocked || !nonzero) continue;
-
-      return makeData(need, alloc, avail);
-    }
-    return fallbackSafe(n, m);
-  }
-
-  function fallbackSafe(n, m) {
-    var avail = [];
-    for (var r = 0; r < m; r++) avail.push(2);
-    var alloc = [];
-    var need = [];
-    for (var i = 0; i < n; i++) {
-      var a = zeros(m);
-      var nd = zeros(m);
-      if (i === 0) a[0] = 1;
-      else nd[0] = 3;
-      alloc.push(a);
-      need.push(nd);
-    }
-    return makeData(need, alloc, avail);
-  }
-
-  // Rejection sampling: keep small numbers, let someone start, and get stuck.
-  function genUnsafe(n, m) {
-    for (var attempt = 0; attempt < 800; attempt++) {
-      var avail = [];
-      for (var r = 0; r < m; r++) avail.push(randInt(0, 2));
-      if (allZero(avail)) avail[randInt(0, m - 1)] = randInt(1, 2);
-
-      var alloc = [];
-      var need = [];
-      for (var i = 0; i < n; i++) {
-        var a = [];
-        var nd = [];
-        for (r = 0; r < m; r++) {
-          a.push(randInt(0, 3));
-          nd.push(randInt(0, 5));
+        function randInt(min, max) {
+          return min + Math.floor(Math.random() * (max - min + 1));
         }
-        alloc.push(a);
-        need.push(nd);
-      }
-
-      var p = randInt(0, n - 1);
-      for (r = 0; r < m; r++) need[p][r] = randInt(0, avail[r]);
-
-      var d = makeData(need, alloc, avail);
-      var run = greedy(d.procs, avail);
-      if (run.safe) continue;
-      if (run.order.length < 2 || run.order.length >= n) continue;
-
-      var nonzero = false;
-      for (i = 0; i < n; i++) if (Math.max.apply(null, need[i]) > 0) nonzero = true;
-      if (!nonzero) continue;
-
-      return d;
-    }
-    return fallbackUnsafe(n, m);
-  }
-
-  function fallbackUnsafe(n, m) {
-    var avail = [];
-    for (var r = 0; r < m; r++) avail.push(1);
-    var alloc = [];
-    var need = [];
-    for (var i = 0; i < n; i++) {
-      var a = zeros(m);
-      var nd = [];
-      for (var r2 = 0; r2 < m; r2++) nd.push(i === 0 ? 0 : 3);
-      if (i === 0) a[0] = 1;
-      alloc.push(a);
-      need.push(nd);
-    }
-    return makeData(need, alloc, avail);
-  }
-
-  function procByPid(procs, pid) {
-    for (var i = 0; i < procs.length; i++) if (procs[i].pid === pid) return procs[i];
-    return null;
-  }
-  /* PURE-END */
-  var state = {
-    n: 5,
-    m: 3,
-    kind: 'random',
-    given: 'available',
-    procs: [],
-    available: [],
-    total: [],
-    unsafe: false,
-    need: {},
-    avail: {},
-    order: [],
-    verdict: false,
-    submitted: false,
-    revealed: false
-  };
-
-  var KINDS = [
-    ['random', 'Random mix'],
-    ['safe', 'Always safe'],
-    ['unsafe', 'Always unsafe']
-  ];
-  var NS = [4, 5, 6];
-  var MS = [3, 4];
-  var DATAS = [
-    ['available', 'Available given'],
-    ['total', 'Total given']
-  ];
-
-  var $ = function (id) { return document.getElementById(id); };
-  var el = {};
-
-  function esc(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
-    });
-  }
-
-  function fmt(v) {
-    return '(' + v.join(', ') + ')';
-  }
-
-  function proc(pid) {
-    return procByPid(state.procs, pid);
-  }
-
-  function resHeads(m, cls) {
-    var s = '';
-    for (var r = 0; r < m; r++) {
-      s += '<th' + (r === 0 && cls ? ' class="' + cls + '"' : '') + '>R' + (r + 1) + '</th>';
-    }
-    return s;
-  }
-
-  function grp(label, m, cls) {
-    return '<th class="grp' + (cls ? ' ' + cls : '') + '" colspan="' + m + '">' + label + '</th>';
-  }
-
-  /* ---------------- rendering ---------------- */
-
-  function chipHTML(attr, value, label, on) {
-    return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-' + attr + '="' + value + '">' +
-      esc(label) + '</button>';
-  }
-
-  function renderChips() {
-    el.kindChips.innerHTML = KINDS.map(function (k) {
-      return chipHTML('kind', k[0], k[1], state.kind === k[0]);
-    }).join('');
-
-    el.nChips.innerHTML = NS.map(function (n) {
-      return chipHTML('n', n, n, state.n === n);
-    }).join('');
-
-    el.mChips.innerHTML = MS.map(function (m) {
-      return chipHTML('m', m, m, state.m === m);
-    }).join('');
-
-    el.dataChips.innerHTML = DATAS.map(function (d) {
-      return chipHTML('data', d[0], d[1], state.given === d[0]);
-    }).join('');
-  }
-
-  function renderGiven() {
-    var isTotal = state.given === 'total';
-    var vec = isTotal ? state.total : state.available;
-    el.availStrip.innerHTML = '<span class="vec-lbl">' + (isTotal ? 'Total instances' : 'Available') + '</span>' +
-      vec.map(function (v, r) {
-        return '<span class="vec-chip">R' + (r + 1) + '<b>' + v + '</b></span>';
-      }).join('');
-
-    el.dataNote.innerHTML = isTotal
-      ? 'Available is not given: subtract every allocation from the total instances, then type that vector in the row of the first process in your order.'
-      : 'The starting available vector is given above. In each process&rsquo;s row, type the vector at the moment that process starts &mdash; following the completion order you write below.';
-  }
-
-  function needCells(p) {
-    var cells = '';
-    for (var r = 0; r < state.m; r++) {
-      var v = state.need[p.pid][r];
-      cells += '<td class="anscell' + (r === 0 ? ' gsep' : '') + '">' +
-        '<input class="ans needin" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
-        'data-pid="' + p.pid + '" data-r="' + r + '" value="' + esc(v == null ? '' : v) + '" ' +
-        'aria-label="' + p.pid + ' current need R' + (r + 1) + '">' +
-        '<span class="sol" hidden></span></td>';
-    }
-    return cells;
-  }
-
-  function availCells(p) {
-    var cells = '';
-    for (var r = 0; r < state.m; r++) {
-      var v = state.avail[p.pid][r];
-      cells += '<td class="anscell' + (r === 0 ? ' gsep' : '') + '">' +
-        '<input class="ans avail" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
-        'data-pid="' + p.pid + '" data-r="' + r + '" value="' + esc(v == null ? '' : v) + '" ' +
-        'aria-label="' + p.pid + ' available when it starts R' + (r + 1) + '">' +
-        '<span class="sol" hidden></span></td>';
-    }
-    return cells;
-  }
-
-  function renderTable() {
-    var m = state.m;
-    var head = '<thead><tr>' +
-      '<th rowspan="2">#</th><th rowspan="2">Process</th>' +
-      grp('Max need', m, 'echo gsep') +
-      grp('Allocated', m, 'echo gsep') +
-      grp('Current need', m, 'gsep') +
-      grp('Available', m, 'gsep') +
-      '<th rowspan="2" class="gsep">Status</th>' +
-      '</tr><tr>' +
-      resHeads(m, 'gsep') + resHeads(m, 'gsep') + resHeads(m, 'gsep') + resHeads(m, 'gsep') +
-      '</tr></thead>';
-
-    var body = state.procs.map(function (p, i) {
-      var cells = '<td class="rowno">' + (i + 1) + '</td>' +
-        '<td class="pid">' + p.pid + '</td>';
-      var r;
-
-      for (r = 0; r < m; r++) {
-        cells += '<td class="dim' + (r === 0 ? ' gsep' : '') + '" data-grp="max">' + p.max[r] + '</td>';
-      }
-      for (r = 0; r < m; r++) {
-        cells += '<td class="dim' + (r === 0 ? ' gsep' : '') + '" data-grp="alloc">' + p.alloc[r] + '</td>';
-      }
-
-      cells += needCells(p);
-      cells += availCells(p);
-      cells += '<td class="chk gsep" data-pid="' + p.pid + '"></td>';
-
-      return '<tr class="prow" data-pid="' + p.pid + '">' + cells + '</tr>';
-    }).join('');
-
-    el.seqTable.innerHTML = head + '<tbody>' + body + '</tbody>';
-    updateOrderStatus();
-  }
-
-  function renderOrder() {
-    el.orderSlots.innerHTML = state.order.map(function (v, i) {
-      return '<span class="oslot"><b>' + (i + 1) + '</b>' +
-        '<input class="ord" type="text" maxlength="3" autocomplete="off" spellcheck="false" ' +
-        'data-i="' + i + '" value="' + esc(v) + '" aria-label="Process finished at step ' + (i + 1) + '">' +
-        '</span>';
-    }).join('');
-    updateOrderStatus();
-  }
-
-  /* ---------------- order checking ---------------- */
-
-  function computeRun() {
-    var slots = [];
-    var byPid = {};
-    var seen = {};
-    var work = state.available.slice();
-    var broken = false;
-    var placed = 0;
-    var duplicate = false;
-    var unknown = false;
-    var firstBlocked = -1;
-    var firstDup = -1;
-    var firstUnknown = -1;
-
-    for (var i = 0; i < state.order.length; i++) {
-      var raw = String(state.order[i] == null ? '' : state.order[i]).trim();
-      if (!raw) {
-        slots.push({ index: i, status: 'empty', raw: raw });
-        continue;
-      }
-
-      var token = raw.toUpperCase();
-      var pid = token.charAt(0) === 'P' ? token : 'P' + token;
-      var p = proc(pid);
-
-      if (!p) {
-        unknown = true;
-        if (firstUnknown < 0) firstUnknown = i;
-        slots.push({ index: i, status: 'unknown', raw: raw });
-        continue;
-      }
-
-      if (seen[pid]) {
-        duplicate = true;
-        if (firstDup < 0) firstDup = i;
-        slots.push({ index: i, status: 'dup', raw: raw, pid: pid, proc: p, expected: work.slice() });
-        continue;
-      }
-      seen[pid] = true;
-
-      var expected = work.slice();
-      var status;
-
-      if (broken) {
-        status = 'skipped';
-      } else if (!leVec(p.need, work)) {
-        status = 'blocked';
-        broken = true;
-        if (firstBlocked < 0) firstBlocked = i;
-      } else {
-        status = 'ok';
-        placed++;
-        work = addVec(work, p.alloc);
-      }
-
-      var info = { index: i, status: status, raw: raw, pid: pid, proc: p, expected: expected };
-      slots.push(info);
-      byPid[pid] = info;
-    }
-
-    var used = {};
-    Object.keys(byPid).forEach(function (pid) {
-      if (byPid[pid].status === 'ok') used[pid] = true;
-    });
-
-    var remaining = state.procs.filter(function (p) { return !used[p.pid]; });
-    var stuck = remaining.length > 0 && remaining.every(function (p) {
-      return !leVec(p.need, work);
-    });
-
-    return {
-      slots: slots, byPid: byPid, work: work, placed: placed,
-      remaining: remaining, broken: broken, stuck: stuck,
-      full: placed === state.procs.length,
-      duplicate: duplicate, unknown: unknown,
-      firstBlocked: firstBlocked, firstDup: firstDup, firstUnknown: firstUnknown
-    };
-  }
-
-  function updateOrderStatus() {
-    var run = computeRun();
-    var i;
-
-    for (i = 0; i < run.slots.length; i++) {
-      var inp = el.orderSlots.querySelector('.ord[data-i="' + i + '"]');
-      if (!inp) continue;
-      var s = run.slots[i].status;
-      inp.classList.toggle('bad', s === 'unknown' || s === 'dup' || s === 'blocked');
-      inp.classList.toggle('ok', s === 'ok');
-    }
-
-    state.procs.forEach(function (p) {
-      var cell = el.seqTable.querySelector('.chk[data-pid="' + p.pid + '"]');
-      if (!cell) return;
-      var info = run.byPid[p.pid];
-
-      if (!info) {
-        cell.className = 'chk gsep';
-        cell.textContent = '';
-        cell.title = '';
-        return;
-      }
-
-      var sym = '✓';
-      var cls = 'st-ok';
-      var tip = p.pid + ' fits in the availability at its step';
-
-      if (info.status === 'blocked') {
-        sym = '✗';
-        cls = 'st-bad';
-        tip = p.pid + ' does not fit the availability at step ' + (info.index + 1);
-      } else if (info.status === 'skipped') {
-        sym = '·';
-        cls = 'st-skip';
-        tip = 'blocked by an earlier step';
-      }
-
-      cell.className = 'chk gsep ' + cls;
-      cell.textContent = sym;
-      cell.title = tip;
-    });
-
-    el.seqLive.innerHTML = seqHint(run);
-    el.verdictBtn.classList.toggle('on', state.verdict);
-  }
-
-  function seqHint(run) {
-    if (run.unknown) {
-      return 'Step ' + (run.firstUnknown + 1) + ': that is not one of the processes.';
-    }
-    if (run.duplicate) {
-      return 'Step ' + (run.firstDup + 1) + ': that process already appears earlier.';
-    }
-    if (state.verdict) {
-      return run.stuck
-        ? 'Marked <b>unsafe</b> &mdash; nothing left fits in the availability ' + fmt(run.work) + '.'
-        : 'Marked <b>unsafe</b> &mdash; only submit this if nothing else can run.';
-    }
-    if (run.broken) {
-      var info = run.slots[run.firstBlocked];
-      return '<b>' + info.pid + '</b> needs ' + fmt(info.proc.need) + ' but only ' +
-        fmt(info.expected) + ' is available at step ' + (run.firstBlocked + 1) + '.';
-    }
-    if (run.full) return '<b>All processes placed &mdash; the state is safe.</b>';
-    if (run.placed) return run.placed + ' of ' + state.procs.length +
-      ' placed. Next available: ' + fmt(run.work) + '.';
-    return 'Start with a process whose need fits in the available vector.';
-  }
-
-  /* ---------------- grading ---------------- */
-
-  function evaluate() {
-    var run = computeRun();
-    var m = state.m;
-    var needRes = {};
-    var needCorrect = 0;
-    var needTotal = state.procs.length * m;
-
-    state.procs.forEach(function (p) {
-      for (var r = 0; r < m; r++) {
-        var k = p.pid + '|' + r;
-        var raw = String(state.need[p.pid][r] == null ? '' : state.need[p.pid][r]).trim();
-        var v = raw === '' ? NaN : Number(raw);
-        var ok = isFinite(v) && v === p.need[r];
-        if (ok) needCorrect++;
-        needRes[k] = { ok: ok, answer: p.need[r] };
-      }
-    });
-
-    var availRes = {};
-    var availCorrect = 0;
-    var availTotal = 0;
-
-    state.procs.forEach(function (p) {
-      var info = run.byPid[p.pid];
-      if (!info) return;
-      for (var r = 0; r < m; r++) {
-        var k = p.pid + '|' + r;
-        var raw = String(state.avail[p.pid][r] == null ? '' : state.avail[p.pid][r]).trim();
-        var v = raw === '' ? NaN : Number(raw);
-        var ok = isFinite(v) && v === info.expected[r];
-        availTotal++;
-        if (ok) availCorrect++;
-        availRes[k] = { ok: ok, answer: info.expected[r] };
-      }
-    });
-
-    var total = state.procs.length;
-    var orderOk = false;
-    var orderLabel = '';
-    var orderCls = 'bad';
-
-    var verdictOk = state.unsafe && state.verdict && run.stuck &&
-      !run.unknown && !run.duplicate && !run.full;
-
-    if (run.unknown) {
-      orderLabel = 'Unknown process in order';
-    } else if (run.duplicate) {
-      orderLabel = 'Duplicate process in order';
-    } else if (run.full) {
-      if (state.verdict) {
-        orderLabel = 'Verdict wrong — the system is safe';
-      } else {
-        orderOk = true;
-        orderLabel = 'Order safe ✓';
-        orderCls = 'good';
-      }
-    } else if (verdictOk) {
-      orderOk = true;
-      orderLabel = 'Unsafe state shown ✓';
-      orderCls = 'good';
-    } else if (state.verdict) {
-      orderLabel = state.unsafe ? 'Verdict not proven' : 'Verdict wrong — the system is safe';
-    } else if (run.broken) {
-      orderLabel = 'Order blocked at step ' + (run.firstBlocked + 1);
-    } else if (!run.placed) {
-      orderLabel = 'Order empty';
-      orderCls = 'mid';
-    } else {
-      orderLabel = 'Order ' + run.placed + '/' + total;
-      orderCls = 'mid';
-    }
-
-    return {
-      need: needRes, needCorrect: needCorrect, needTotal: needTotal,
-      avail: availRes, availCorrect: availCorrect, availTotal: availTotal,
-      orderOk: orderOk, orderLabel: orderLabel, orderCls: orderCls
-    };
-  }
-
-  function markCells(inputs, resultAt) {
-    inputs.forEach(function (inp) {
-      var r = resultAt(inp);
-      inp.classList.toggle('ok', !!r && r.ok);
-      inp.classList.toggle('bad', !!r && !r.ok);
-      var sol = inp.parentElement.querySelector('.sol');
-      if (state.revealed && r && !r.ok) {
-        sol.textContent = '= ' + r.answer;
-        sol.hidden = false;
-      } else {
-        sol.textContent = '';
-        sol.hidden = true;
-      }
-    });
-  }
-
-  function applyMarks(res) {
-    markCells(el.seqTable.querySelectorAll('.needin'), function (inp) {
-      return res.need[inp.dataset.pid + '|' + inp.dataset.r];
-    });
-    markCells(el.seqTable.querySelectorAll('.avail'), function (inp) {
-      return res.avail[inp.dataset.pid + '|' + inp.dataset.r];
-    });
-  }
-
-  function renderScore(res) {
-    if (!state.submitted) { el.score.innerHTML = ''; return; }
-
-    var items = res.needTotal + res.availTotal + 1;
-    var got = res.needCorrect + res.availCorrect + (res.orderOk ? 1 : 0);
-    var pct = Math.round((got / items) * 100);
-
-    var needCls = res.needCorrect === res.needTotal ? 'good' : (res.needCorrect === 0 ? 'bad' : 'mid');
-    var availCls = res.availCorrect === res.availTotal ? 'good' : (res.availCorrect === 0 ? 'bad' : 'mid');
-
-    el.score.innerHTML =
-      '<span class="pill ' + (pct === 100 ? 'good' : (pct < 50 ? 'bad' : 'mid')) + '">' + pct + '%</span>' +
-      '<span class="pill ' + needCls + '">Need ' + res.needCorrect + '/' + res.needTotal + '</span>' +
-      (res.availTotal
-        ? '<span class="pill ' + availCls + '">Available ' + res.availCorrect + '/' + res.availTotal + '</span>'
-        : '<span class="pill mid">Available not started</span>') +
-      '<span class="pill ' + res.orderCls + '">' + res.orderLabel + '</span>';
-  }
-  /* ---------------- solution ---------------- */
-
-  function seqSolutionHTML(run) {
-    var work = state.available.slice();
-    var items = run.order.map(function (pid) {
-      var p = proc(pid);
-      var before = work.slice();
-      work = addVec(work, p.alloc);
-      return '<li><b>' + pid + '</b> needs ' + fmt(p.need) + ' &le; available ' + fmt(before) +
-        ' &rarr; after it finishes, available becomes ' + fmt(work) + '</li>';
-    }).join('');
-
-    return '<ol class="sol-seq">' + items + '</ol>' +
-      '<div class="sol-foot">Other safe sequences can also be correct, so the availability is checked against the order you choose.</div>';
-  }
-
-  function unsafeSolutionHTML(run) {
-    var work = state.available.slice();
-    var used = {};
-    var items = run.order.map(function (pid) {
-      var p = proc(pid);
-      var before = work.slice();
-      used[pid] = true;
-      work = addVec(work, p.alloc);
-      return '<li><b>' + pid + '</b> needs ' + fmt(p.need) + ' &le; available ' + fmt(before) +
-        ' &rarr; available becomes ' + fmt(work) + '</li>';
-    }).join('');
-
-    var left = state.procs.filter(function (p) { return !used[p.pid]; });
-    var blocked = left.map(function (p) {
-      return p.pid + ' needs ' + fmt(p.need);
-    }).join('; ');
-
-    return (items ? '<ol class="sol-seq">' + items + '</ol>' : '') +
-      '<div class="sol-foot">With only ' + fmt(work) + ' available, no remaining process fits: ' + blocked +
-      '. So there is no safe sequence and the system is <b>unsafe</b>.</div>';
-  }
-
-  function showSolution() {
-    state.submitted = true;
-    state.revealed = true;
-
-    var run = greedy(state.procs, state.available);
-    el.solSeq.innerHTML =
-      '<div class="sol-head ' + (run.safe ? 'sol-good' : 'sol-bad') + '">' +
-      (run.safe ? 'Safe sequence' : 'No safe sequence &mdash; unsafe state') + '</div>' +
-      (run.safe ? seqSolutionHTML(run) : unsafeSolutionHTML(run));
-    el.solSeq.hidden = false;
-
-    grade();
-  }
-
-  function hideSolution() {
-    el.solSeq.hidden = true;
-    el.solSeq.innerHTML = '';
-  }
-
-  /* ---------------- actions ---------------- */
-
-  function grade() {
-    var res = evaluate();
-    applyMarks(res);
-    renderScore(res);
-  }
-
-  function submit() {
-    state.submitted = true;
-    grade();
-  }
-
-  function clearMarks() {
-    el.seqTable.querySelectorAll('.ans').forEach(function (n) {
-      n.classList.remove('ok', 'bad');
-    });
-    el.seqTable.querySelectorAll('.sol').forEach(function (n) {
-      n.textContent = '';
-      n.hidden = true;
-    });
-    el.score.innerHTML = '';
-  }
-
-  function retry() {
-    state.submitted = false;
-    state.revealed = false;
-    clearMarks();
-    hideSolution();
-  }
-
-  function blankVec() {
-    var row = [];
-    for (var r = 0; r < state.m; r++) row.push('');
-    return row;
-  }
-
-  function resetEntries() {
-    state.need = {};
-    state.avail = {};
-    state.procs.forEach(function (p) {
-      state.need[p.pid] = blankVec();
-      state.avail[p.pid] = blankVec();
-    });
-
-    state.order = [];
-    for (var i = 0; i < state.procs.length; i++) state.order.push('');
-
-    state.verdict = false;
-    state.submitted = false;
-    state.revealed = false;
-  }
-
-  function renderAll() {
-    renderChips();
-    renderGiven();
-    renderTable();
-    renderOrder();
-    hideSolution();
-    clearMarks();
-    state.submitted = false;
-    state.revealed = false;
-    el.score.innerHTML = '';
-  }
-
-  function newProblem() {
-    var kind = state.kind === 'random'
-      ? (Math.random() < 0.5 ? 'safe' : 'unsafe')
-      : state.kind;
-    var d = kind === 'safe' ? genSafe(state.n, state.m) : genUnsafe(state.n, state.m);
-
-    state.procs = d.procs;
-    state.available = d.available;
-    state.total = d.total;
-    state.unsafe = !greedy(d.procs, d.available).safe;
-
-    resetEntries();
-    renderAll();
-  }
-
-  function changeKind(kind) {
-    if (kind === state.kind) return;
-    state.kind = kind;
-    newProblem();
-  }
-
-  function changeN(n) {
-    if (n === state.n) return;
-    state.n = n;
-    newProblem();
-  }
-
-  function changeM(m) {
-    if (m === state.m) return;
-    state.m = m;
-    newProblem();
-  }
-
-  function changeData(mode) {
-    if (mode === state.given) return;
-    state.given = mode;
-    renderGiven();
-    renderChips();
-  }
-
-  /* ---------------- wiring ---------------- */
-
-  function focusCell(selector) {
-    var inp = el.seqTable.querySelector(selector);
-    if (inp) inp.focus();
-  }
-
-  function bind() {
-    el = {
-      kindChips: $('kindChips'),
-      nChips: $('nChips'),
-      mChips: $('mChips'),
-      dataChips: $('dataChips'),
-      newBtn: $('newBtn'),
-      dataNote: $('dataNote'),
-      availStrip: $('availStrip'),
-      seqTable: $('seqTable'),
-      orderSlots: $('orderSlots'),
-      seqLive: $('seqLive'),
-      verdictBtn: $('verdictBtn'),
-      solSeq: $('solSeq'),
-      score: $('score'),
-      submitBtn: $('submitBtn'),
-      retryBtn: $('retryBtn'),
-      revealBtn: $('revealBtn')
-    };
-
-    el.kindChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-kind]');
-      if (b) changeKind(b.dataset.kind);
-    });
-
-    el.nChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-n]');
-      if (b) changeN(parseInt(b.dataset.n, 10));
-    });
-
-    el.mChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-m]');
-      if (b) changeM(parseInt(b.dataset.m, 10));
-    });
-
-    el.dataChips.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-data]');
-      if (b) changeData(b.dataset.data);
-    });
-
-    el.newBtn.addEventListener('click', newProblem);
-    el.submitBtn.addEventListener('click', submit);
-    el.retryBtn.addEventListener('click', retry);
-    el.revealBtn.addEventListener('click', showSolution);
-
-    el.verdictBtn.addEventListener('click', function () {
-      state.verdict = !state.verdict;
-      updateOrderStatus();
-      if (state.submitted) grade();
-    });
-
-    el.seqTable.addEventListener('input', function (e) {
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      inp.value = inp.value.replace(/\D/g, '').slice(0, 2);
-      var r = parseInt(inp.dataset.r, 10);
-
-      if (inp.classList.contains('needin')) {
-        state.need[inp.dataset.pid][r] = inp.value;
-      } else {
-        state.avail[inp.dataset.pid][r] = inp.value;
-      }
-
-      updateOrderStatus();
-      if (state.submitted) grade();
-    });
-
-    el.seqTable.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') return;
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      e.preventDefault();
-
-      var pool = Array.prototype.slice.call(
-        el.seqTable.querySelectorAll(inp.classList.contains('needin') ? '.needin' : '.avail')
-      );
-      var idx = pool.indexOf(inp);
-
-      if (idx >= 0 && idx < pool.length - 1) {
-        pool[idx + 1].focus();
-      } else if (inp.classList.contains('needin')) {
-        var first = el.orderSlots.querySelector('.ord');
-        if (first) first.focus();
-      } else {
-        submit();
-      }
-    });
-
-    el.orderSlots.addEventListener('input', function (e) {
-      var inp = e.target.closest('.ord');
-      if (!inp) return;
-
-      var v = inp.value.toUpperCase().replace(/[^0-9P]/g, '').slice(0, 3);
-      if (/^\d+$/.test(v)) v = 'P' + v;
-      inp.value = v;
-      state.order[parseInt(inp.dataset.i, 10)] = v;
-      state.verdict = false;
-      updateOrderStatus();
-      if (state.submitted) grade();
-    });
-
-    el.orderSlots.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') return;
-      var inp = e.target.closest('.ord');
-      if (!inp) return;
-      e.preventDefault();
-
-      var all = Array.prototype.slice.call(el.orderSlots.querySelectorAll('.ord'));
-      var idx = all.indexOf(inp);
-
-      if (idx >= 0 && idx < all.length - 1) {
-        all[idx + 1].focus();
-        return;
-      }
-
-      var run = computeRun();
-      var first = '';
-      for (var i = 0; i < run.slots.length; i++) {
-        if (run.slots[i].status === 'ok') { first = run.slots[i].pid; break; }
-      }
-      if (first) focusCell('.avail[data-pid="' + first + '"][data-r="0"]');
-      else focusCell('.avail');
-    });
-
-    el.seqTable.addEventListener('focusin', function (e) {
-      var inp = e.target.closest('.ans');
-      if (!inp) return;
-      setTimeout(function () { inp.select(); }, 0);
-    });
-
-    el.orderSlots.addEventListener('focusin', function (e) {
-      var inp = e.target.closest('.ord');
-      if (!inp) return;
-      setTimeout(function () { inp.select(); }, 0);
-    });
-  }
-
-  bind();
-  newProblem();
-})();
-</script>
-</body>
+
+        function shuffle(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = randInt(0, i);
+            var t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+          }
+          return a;
+        }
+
+        function rangeArr(n) {
+          var a = [];
+          for (var i = 0; i < n; i++) a.push(i);
+          return a;
+        }
+
+        function addVec(a, b) {
+          var o = [];
+          for (var i = 0; i < a.length; i++) o.push(a[i] + b[i]);
+          return o;
+        }
+
+        function sumVecs(list) {
+          var o = zeros(list.length ? list[0].length : 0);
+          for (var i = 0; i < list.length; i++) o = addVec(o, list[i]);
+          return o;
+        }
+
+        function leVec(a, b) {
+          for (var i = 0; i < a.length; i++) if (a[i] > b[i]) return false;
+          return true;
+        }
+
+        function allZero(v) {
+          for (var i = 0; i < v.length; i++) if (v[i] !== 0) return false;
+          return true;
+        }
+
+        function makeData(need, alloc, avail) {
+          var procs = need.map(function (nd, i) {
+            return {
+              pid: "P" + i,
+              id: i,
+              need: nd.slice(),
+              alloc: alloc[i].slice(),
+              max: addVec(nd, alloc[i]),
+            };
+          });
+          return {
+            procs: procs,
+            available: avail.slice(),
+            total: addVec(sumVecs(alloc), avail),
+          };
+        }
+
+        // In a safe state any feasible choice keeps the state safe, so a single
+        // greedy first-fit pass is enough to decide safety.
+        function greedy(procs, avail) {
+          var work = avail.slice();
+          var used = {};
+          var order = [];
+          var guard = 0;
+          while (guard++ <= procs.length) {
+            var pick = -1;
+            for (var i = 0; i < procs.length; i++) {
+              if (used[i]) continue;
+              if (leVec(procs[i].need, work)) {
+                pick = i;
+                break;
+              }
+            }
+            if (pick < 0) break;
+            used[pick] = true;
+            order.push(procs[pick].pid);
+            work = addVec(work, procs[pick].alloc);
+          }
+          return {
+            order: order,
+            work: work,
+            safe: order.length === procs.length,
+          };
+        }
+
+        // Build a safe problem backwards from a random order, so a solution exists.
+        function genSafe(n, m) {
+          for (var attempt = 0; attempt < 400; attempt++) {
+            var order = shuffle(rangeArr(n));
+            var avail = [];
+            for (var r = 0; r < m; r++) avail.push(randInt(0, 3));
+            if (allZero(avail)) avail[randInt(0, m - 1)] = randInt(1, 3);
+
+            var work = avail.slice();
+            var alloc = [];
+            var need = [];
+            var fits = true;
+
+            for (var k = 0; k < n; k++) {
+              var idx = order[k];
+              var a = [];
+              var nd = [];
+              for (r = 0; r < m; r++) {
+                a.push(randInt(0, 3));
+                nd.push(randInt(0, Math.min(work[r], 6)));
+              }
+              alloc[idx] = a;
+              need[idx] = nd;
+              work = addVec(work, a);
+              if (Math.max.apply(null, addVec(nd, a)) > 9) fits = false;
+            }
+            if (!fits) continue;
+
+            var blocked = 0;
+            var nonzero = false;
+            for (var i = 0; i < n; i++) {
+              if (!leVec(need[i], avail)) blocked++;
+              if (Math.max.apply(null, need[i]) > 0) nonzero = true;
+            }
+            if (!blocked || !nonzero) continue;
+
+            return makeData(need, alloc, avail);
+          }
+          return fallbackSafe(n, m);
+        }
+
+        function fallbackSafe(n, m) {
+          var avail = [];
+          for (var r = 0; r < m; r++) avail.push(2);
+          var alloc = [];
+          var need = [];
+          for (var i = 0; i < n; i++) {
+            var a = zeros(m);
+            var nd = zeros(m);
+            if (i === 0) a[0] = 1;
+            else nd[0] = 3;
+            alloc.push(a);
+            need.push(nd);
+          }
+          return makeData(need, alloc, avail);
+        }
+
+        // Rejection sampling: keep small numbers, let someone start, and get stuck.
+        function genUnsafe(n, m) {
+          for (var attempt = 0; attempt < 800; attempt++) {
+            var avail = [];
+            for (var r = 0; r < m; r++) avail.push(randInt(0, 2));
+            if (allZero(avail)) avail[randInt(0, m - 1)] = randInt(1, 2);
+
+            var alloc = [];
+            var need = [];
+            for (var i = 0; i < n; i++) {
+              var a = [];
+              var nd = [];
+              for (r = 0; r < m; r++) {
+                a.push(randInt(0, 3));
+                nd.push(randInt(0, 5));
+              }
+              alloc.push(a);
+              need.push(nd);
+            }
+
+            var p = randInt(0, n - 1);
+            for (r = 0; r < m; r++) need[p][r] = randInt(0, avail[r]);
+
+            var d = makeData(need, alloc, avail);
+            var run = greedy(d.procs, avail);
+            if (run.safe) continue;
+            if (run.order.length < 2 || run.order.length >= n) continue;
+
+            var nonzero = false;
+            for (i = 0; i < n; i++)
+              if (Math.max.apply(null, need[i]) > 0) nonzero = true;
+            if (!nonzero) continue;
+
+            return d;
+          }
+          return fallbackUnsafe(n, m);
+        }
+
+        function fallbackUnsafe(n, m) {
+          var avail = [];
+          for (var r = 0; r < m; r++) avail.push(1);
+          var alloc = [];
+          var need = [];
+          for (var i = 0; i < n; i++) {
+            var a = zeros(m);
+            var nd = [];
+            for (var r2 = 0; r2 < m; r2++) nd.push(i === 0 ? 0 : 3);
+            if (i === 0) a[0] = 1;
+            alloc.push(a);
+            need.push(nd);
+          }
+          return makeData(need, alloc, avail);
+        }
+
+        function procByPid(procs, pid) {
+          for (var i = 0; i < procs.length; i++)
+            if (procs[i].pid === pid) return procs[i];
+          return null;
+        }
+        /* PURE-END */
+        var state = {
+          n: 5,
+          m: 3,
+          kind: "random",
+          given: "available",
+          procs: [],
+          available: [],
+          total: [],
+          unsafe: false,
+          need: {},
+          avail: {},
+          order: [],
+          verdict: false,
+          submitted: false,
+          revealed: false,
+        };
+
+        var KINDS = [
+          ["random", "Random mix"],
+          ["safe", "Always safe"],
+          ["unsafe", "Always unsafe"],
+        ];
+        var NS = [4, 5, 6];
+        var MS = [3, 4];
+        var DATAS = [
+          ["available", "Available given"],
+          ["total", "Total given"],
+        ];
+
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+        var el = {};
+
+        function esc(s) {
+          return String(s).replace(/[&<>"]/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+          });
+        }
+
+        function fmt(v) {
+          return "(" + v.join(", ") + ")";
+        }
+
+        function proc(pid) {
+          return procByPid(state.procs, pid);
+        }
+
+        function resHeads(m, cls) {
+          var s = "";
+          for (var r = 0; r < m; r++) {
+            s +=
+              "<th" +
+              (r === 0 && cls ? ' class="' + cls + '"' : "") +
+              ">R" +
+              (r + 1) +
+              "</th>";
+          }
+          return s;
+        }
+
+        function grp(label, m, cls) {
+          return (
+            '<th class="grp' +
+            (cls ? " " + cls : "") +
+            '" colspan="' +
+            m +
+            '">' +
+            label +
+            "</th>"
+          );
+        }
+
+        /* ---------------- rendering ---------------- */
+
+        function chipHTML(attr, value, label, on) {
+          return (
+            '<button type="button" class="chip' +
+            (on ? " on" : "") +
+            '" data-' +
+            attr +
+            '="' +
+            value +
+            '">' +
+            esc(label) +
+            "</button>"
+          );
+        }
+
+        function renderChips() {
+          el.kindChips.innerHTML = KINDS.map(function (k) {
+            return chipHTML("kind", k[0], k[1], state.kind === k[0]);
+          }).join("");
+
+          el.nChips.innerHTML = NS.map(function (n) {
+            return chipHTML("n", n, n, state.n === n);
+          }).join("");
+
+          el.mChips.innerHTML = MS.map(function (m) {
+            return chipHTML("m", m, m, state.m === m);
+          }).join("");
+
+          el.dataChips.innerHTML = DATAS.map(function (d) {
+            return chipHTML("data", d[0], d[1], state.given === d[0]);
+          }).join("");
+        }
+
+        function renderGiven() {
+          var isTotal = state.given === "total";
+          var vec = isTotal ? state.total : state.available;
+          el.availStrip.innerHTML =
+            '<span class="vec-lbl">' +
+            (isTotal ? "Total instances" : "Available") +
+            "</span>" +
+            vec
+              .map(function (v, r) {
+                return (
+                  '<span class="vec-chip">R' +
+                  (r + 1) +
+                  "<b>" +
+                  v +
+                  "</b></span>"
+                );
+              })
+              .join("");
+
+          el.dataNote.innerHTML = isTotal
+            ? "Available is not given: subtract every allocation from the total instances, then type that vector in the row of the first process in your order."
+            : "The starting available vector is given above. In each process&rsquo;s row, type the vector at the moment that process starts &mdash; following the completion order you write below.";
+        }
+
+        function needCells(p) {
+          var cells = "";
+          for (var r = 0; r < state.m; r++) {
+            var v = state.need[p.pid][r];
+            cells +=
+              '<td class="anscell' +
+              (r === 0 ? " gsep" : "") +
+              '">' +
+              '<input class="ans needin" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
+              'data-pid="' +
+              p.pid +
+              '" data-r="' +
+              r +
+              '" value="' +
+              esc(v == null ? "" : v) +
+              '" ' +
+              'aria-label="' +
+              p.pid +
+              " current need R" +
+              (r + 1) +
+              '">' +
+              '<span class="sol" hidden></span></td>';
+          }
+          return cells;
+        }
+
+        function availCells(p) {
+          var cells = "";
+          for (var r = 0; r < state.m; r++) {
+            var v = state.avail[p.pid][r];
+            cells +=
+              '<td class="anscell' +
+              (r === 0 ? " gsep" : "") +
+              '">' +
+              '<input class="ans avail" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" ' +
+              'data-pid="' +
+              p.pid +
+              '" data-r="' +
+              r +
+              '" value="' +
+              esc(v == null ? "" : v) +
+              '" ' +
+              'aria-label="' +
+              p.pid +
+              " available when it starts R" +
+              (r + 1) +
+              '">' +
+              '<span class="sol" hidden></span></td>';
+          }
+          return cells;
+        }
+
+        function renderTable() {
+          var m = state.m;
+          var head =
+            "<thead><tr>" +
+            '<th rowspan="2">#</th><th rowspan="2">Process</th>' +
+            grp("Max need", m, "echo gsep") +
+            grp("Allocated", m, "echo gsep") +
+            grp("Current need", m, "gsep") +
+            grp("Available", m, "gsep") +
+            '<th rowspan="2" class="gsep">Status</th>' +
+            "</tr><tr>" +
+            resHeads(m, "gsep") +
+            resHeads(m, "gsep") +
+            resHeads(m, "gsep") +
+            resHeads(m, "gsep") +
+            "</tr></thead>";
+
+          var body = state.procs
+            .map(function (p, i) {
+              var cells =
+                '<td class="rowno">' +
+                (i + 1) +
+                "</td>" +
+                '<td class="pid">' +
+                p.pid +
+                "</td>";
+              var r;
+
+              for (r = 0; r < m; r++) {
+                cells +=
+                  '<td class="dim' +
+                  (r === 0 ? " gsep" : "") +
+                  '" data-grp="max">' +
+                  p.max[r] +
+                  "</td>";
+              }
+              for (r = 0; r < m; r++) {
+                cells +=
+                  '<td class="dim' +
+                  (r === 0 ? " gsep" : "") +
+                  '" data-grp="alloc">' +
+                  p.alloc[r] +
+                  "</td>";
+              }
+
+              cells += needCells(p);
+              cells += availCells(p);
+              cells += '<td class="chk gsep" data-pid="' + p.pid + '"></td>';
+
+              return (
+                '<tr class="prow" data-pid="' + p.pid + '">' + cells + "</tr>"
+              );
+            })
+            .join("");
+
+          el.seqTable.innerHTML = head + "<tbody>" + body + "</tbody>";
+          updateOrderStatus();
+        }
+
+        function renderOrder() {
+          el.orderSlots.innerHTML = state.order
+            .map(function (v, i) {
+              return (
+                '<span class="oslot"><b>' +
+                (i + 1) +
+                "</b>" +
+                '<input class="ord" type="text" maxlength="3" autocomplete="off" spellcheck="false" ' +
+                'data-i="' +
+                i +
+                '" value="' +
+                esc(v) +
+                '" aria-label="Process finished at step ' +
+                (i + 1) +
+                '">' +
+                "</span>"
+              );
+            })
+            .join("");
+          updateOrderStatus();
+        }
+
+        /* ---------------- order checking ---------------- */
+
+        function computeRun() {
+          var slots = [];
+          var byPid = {};
+          var seen = {};
+          var work = state.available.slice();
+          var broken = false;
+          var placed = 0;
+          var duplicate = false;
+          var unknown = false;
+          var firstBlocked = -1;
+          var firstDup = -1;
+          var firstUnknown = -1;
+
+          for (var i = 0; i < state.order.length; i++) {
+            var raw = String(
+              state.order[i] == null ? "" : state.order[i],
+            ).trim();
+            if (!raw) {
+              slots.push({ index: i, status: "empty", raw: raw });
+              continue;
+            }
+
+            var token = raw.toUpperCase();
+            var pid = token.charAt(0) === "P" ? token : "P" + token;
+            var p = proc(pid);
+
+            if (!p) {
+              unknown = true;
+              if (firstUnknown < 0) firstUnknown = i;
+              slots.push({ index: i, status: "unknown", raw: raw });
+              continue;
+            }
+
+            if (seen[pid]) {
+              duplicate = true;
+              if (firstDup < 0) firstDup = i;
+              slots.push({
+                index: i,
+                status: "dup",
+                raw: raw,
+                pid: pid,
+                proc: p,
+                expected: work.slice(),
+              });
+              continue;
+            }
+            seen[pid] = true;
+
+            var expected = work.slice();
+            var status;
+
+            if (broken) {
+              status = "skipped";
+            } else if (!leVec(p.need, work)) {
+              status = "blocked";
+              broken = true;
+              if (firstBlocked < 0) firstBlocked = i;
+            } else {
+              status = "ok";
+              placed++;
+              work = addVec(work, p.alloc);
+            }
+
+            var info = {
+              index: i,
+              status: status,
+              raw: raw,
+              pid: pid,
+              proc: p,
+              expected: expected,
+            };
+            slots.push(info);
+            byPid[pid] = info;
+          }
+
+          var used = {};
+          Object.keys(byPid).forEach(function (pid) {
+            if (byPid[pid].status === "ok") used[pid] = true;
+          });
+
+          var remaining = state.procs.filter(function (p) {
+            return !used[p.pid];
+          });
+          var stuck =
+            remaining.length > 0 &&
+            remaining.every(function (p) {
+              return !leVec(p.need, work);
+            });
+
+          return {
+            slots: slots,
+            byPid: byPid,
+            work: work,
+            placed: placed,
+            remaining: remaining,
+            broken: broken,
+            stuck: stuck,
+            full: placed === state.procs.length,
+            duplicate: duplicate,
+            unknown: unknown,
+            firstBlocked: firstBlocked,
+            firstDup: firstDup,
+            firstUnknown: firstUnknown,
+          };
+        }
+
+        function updateOrderStatus() {
+          var run = computeRun();
+          var i;
+
+          for (i = 0; i < run.slots.length; i++) {
+            var inp = el.orderSlots.querySelector('.ord[data-i="' + i + '"]');
+            if (!inp) continue;
+            var s = run.slots[i].status;
+            inp.classList.toggle(
+              "bad",
+              s === "unknown" || s === "dup" || s === "blocked",
+            );
+            inp.classList.toggle("ok", s === "ok");
+          }
+
+          state.procs.forEach(function (p) {
+            var cell = el.seqTable.querySelector(
+              '.chk[data-pid="' + p.pid + '"]',
+            );
+            if (!cell) return;
+            var info = run.byPid[p.pid];
+
+            if (!info) {
+              cell.className = "chk gsep";
+              cell.textContent = "";
+              cell.title = "";
+              return;
+            }
+
+            var sym = "✓";
+            var cls = "st-ok";
+            var tip = p.pid + " fits in the availability at its step";
+
+            if (info.status === "blocked") {
+              sym = "✗";
+              cls = "st-bad";
+              tip =
+                p.pid +
+                " does not fit the availability at step " +
+                (info.index + 1);
+            } else if (info.status === "skipped") {
+              sym = "·";
+              cls = "st-skip";
+              tip = "blocked by an earlier step";
+            }
+
+            cell.className = "chk gsep " + cls;
+            cell.textContent = sym;
+            cell.title = tip;
+          });
+
+          el.seqLive.innerHTML = seqHint(run);
+          el.verdictBtn.classList.toggle("on", state.verdict);
+        }
+
+        function seqHint(run) {
+          if (run.unknown) {
+            return (
+              "Step " +
+              (run.firstUnknown + 1) +
+              ": that is not one of the processes."
+            );
+          }
+          if (run.duplicate) {
+            return (
+              "Step " +
+              (run.firstDup + 1) +
+              ": that process already appears earlier."
+            );
+          }
+          if (state.verdict) {
+            return run.stuck
+              ? "Marked <b>unsafe</b> &mdash; nothing left fits in the availability " +
+                  fmt(run.work) +
+                  "."
+              : "Marked <b>unsafe</b> &mdash; only submit this if nothing else can run.";
+          }
+          if (run.broken) {
+            var info = run.slots[run.firstBlocked];
+            return (
+              "<b>" +
+              info.pid +
+              "</b> needs " +
+              fmt(info.proc.need) +
+              " but only " +
+              fmt(info.expected) +
+              " is available at step " +
+              (run.firstBlocked + 1) +
+              "."
+            );
+          }
+          if (run.full)
+            return "<b>All processes placed &mdash; the state is safe.</b>";
+          if (run.placed)
+            return (
+              run.placed +
+              " of " +
+              state.procs.length +
+              " placed. Next available: " +
+              fmt(run.work) +
+              "."
+            );
+          return "Start with a process whose need fits in the available vector.";
+        }
+
+        /* ---------------- grading ---------------- */
+
+        function evaluate() {
+          var run = computeRun();
+          var m = state.m;
+          var needRes = {};
+          var needCorrect = 0;
+          var needTotal = state.procs.length * m;
+
+          state.procs.forEach(function (p) {
+            for (var r = 0; r < m; r++) {
+              var k = p.pid + "|" + r;
+              var raw = String(
+                state.need[p.pid][r] == null ? "" : state.need[p.pid][r],
+              ).trim();
+              var v = raw === "" ? NaN : Number(raw);
+              var ok = isFinite(v) && v === p.need[r];
+              if (ok) needCorrect++;
+              needRes[k] = { ok: ok, answer: p.need[r] };
+            }
+          });
+
+          var availRes = {};
+          var availCorrect = 0;
+          var availTotal = 0;
+
+          state.procs.forEach(function (p) {
+            var info = run.byPid[p.pid];
+            if (!info) return;
+            for (var r = 0; r < m; r++) {
+              var k = p.pid + "|" + r;
+              var raw = String(
+                state.avail[p.pid][r] == null ? "" : state.avail[p.pid][r],
+              ).trim();
+              var v = raw === "" ? NaN : Number(raw);
+              var ok = isFinite(v) && v === info.expected[r];
+              availTotal++;
+              if (ok) availCorrect++;
+              availRes[k] = { ok: ok, answer: info.expected[r] };
+            }
+          });
+
+          var total = state.procs.length;
+          var orderOk = false;
+          var orderLabel = "";
+          var orderCls = "bad";
+
+          var verdictOk =
+            state.unsafe &&
+            state.verdict &&
+            run.stuck &&
+            !run.unknown &&
+            !run.duplicate &&
+            !run.full;
+
+          if (run.unknown) {
+            orderLabel = "Unknown process in order";
+          } else if (run.duplicate) {
+            orderLabel = "Duplicate process in order";
+          } else if (run.full) {
+            if (state.verdict) {
+              orderLabel = "Verdict wrong — the system is safe";
+            } else {
+              orderOk = true;
+              orderLabel = "Order safe ✓";
+              orderCls = "good";
+            }
+          } else if (verdictOk) {
+            orderOk = true;
+            orderLabel = "Unsafe state shown ✓";
+            orderCls = "good";
+          } else if (state.verdict) {
+            orderLabel = state.unsafe
+              ? "Verdict not proven"
+              : "Verdict wrong — the system is safe";
+          } else if (run.broken) {
+            orderLabel = "Order blocked at step " + (run.firstBlocked + 1);
+          } else if (!run.placed) {
+            orderLabel = "Order empty";
+            orderCls = "mid";
+          } else {
+            orderLabel = "Order " + run.placed + "/" + total;
+            orderCls = "mid";
+          }
+
+          return {
+            need: needRes,
+            needCorrect: needCorrect,
+            needTotal: needTotal,
+            avail: availRes,
+            availCorrect: availCorrect,
+            availTotal: availTotal,
+            orderOk: orderOk,
+            orderLabel: orderLabel,
+            orderCls: orderCls,
+          };
+        }
+
+        function markCells(inputs, resultAt) {
+          inputs.forEach(function (inp) {
+            var r = resultAt(inp);
+            inp.classList.toggle("ok", !!r && r.ok);
+            inp.classList.toggle("bad", !!r && !r.ok);
+            var sol = inp.parentElement.querySelector(".sol");
+            if (state.revealed && r && !r.ok) {
+              sol.textContent = "= " + r.answer;
+              sol.hidden = false;
+            } else {
+              sol.textContent = "";
+              sol.hidden = true;
+            }
+          });
+        }
+
+        function applyMarks(res) {
+          markCells(el.seqTable.querySelectorAll(".needin"), function (inp) {
+            return res.need[inp.dataset.pid + "|" + inp.dataset.r];
+          });
+          markCells(el.seqTable.querySelectorAll(".avail"), function (inp) {
+            return res.avail[inp.dataset.pid + "|" + inp.dataset.r];
+          });
+        }
+
+        function renderScore(res) {
+          if (!state.submitted) {
+            el.score.innerHTML = "";
+            return;
+          }
+
+          var items = res.needTotal + res.availTotal + 1;
+          var got = res.needCorrect + res.availCorrect + (res.orderOk ? 1 : 0);
+          var pct = Math.round((got / items) * 100);
+
+          var needCls =
+            res.needCorrect === res.needTotal
+              ? "good"
+              : res.needCorrect === 0
+                ? "bad"
+                : "mid";
+          var availCls =
+            res.availCorrect === res.availTotal
+              ? "good"
+              : res.availCorrect === 0
+                ? "bad"
+                : "mid";
+
+          el.score.innerHTML =
+            '<span class="pill ' +
+            (pct === 100 ? "good" : pct < 50 ? "bad" : "mid") +
+            '">' +
+            pct +
+            "%</span>" +
+            '<span class="pill ' +
+            needCls +
+            '">Need ' +
+            res.needCorrect +
+            "/" +
+            res.needTotal +
+            "</span>" +
+            (res.availTotal
+              ? '<span class="pill ' +
+                availCls +
+                '">Available ' +
+                res.availCorrect +
+                "/" +
+                res.availTotal +
+                "</span>"
+              : '<span class="pill mid">Available not started</span>') +
+            '<span class="pill ' +
+            res.orderCls +
+            '">' +
+            res.orderLabel +
+            "</span>";
+        }
+        /* ---------------- solution ---------------- */
+
+        function seqSolutionHTML(run) {
+          var work = state.available.slice();
+          var items = run.order
+            .map(function (pid) {
+              var p = proc(pid);
+              var before = work.slice();
+              work = addVec(work, p.alloc);
+              return (
+                "<li><b>" +
+                pid +
+                "</b> needs " +
+                fmt(p.need) +
+                " &le; available " +
+                fmt(before) +
+                " &rarr; after it finishes, available becomes " +
+                fmt(work) +
+                "</li>"
+              );
+            })
+            .join("");
+
+          return (
+            '<ol class="sol-seq">' +
+            items +
+            "</ol>" +
+            '<div class="sol-foot">Other safe sequences can also be correct, so the availability is checked against the order you choose.</div>'
+          );
+        }
+
+        function unsafeSolutionHTML(run) {
+          var work = state.available.slice();
+          var used = {};
+          var items = run.order
+            .map(function (pid) {
+              var p = proc(pid);
+              var before = work.slice();
+              used[pid] = true;
+              work = addVec(work, p.alloc);
+              return (
+                "<li><b>" +
+                pid +
+                "</b> needs " +
+                fmt(p.need) +
+                " &le; available " +
+                fmt(before) +
+                " &rarr; available becomes " +
+                fmt(work) +
+                "</li>"
+              );
+            })
+            .join("");
+
+          var left = state.procs.filter(function (p) {
+            return !used[p.pid];
+          });
+          var blocked = left
+            .map(function (p) {
+              return p.pid + " needs " + fmt(p.need);
+            })
+            .join("; ");
+
+          return (
+            (items ? '<ol class="sol-seq">' + items + "</ol>" : "") +
+            '<div class="sol-foot">With only ' +
+            fmt(work) +
+            " available, no remaining process fits: " +
+            blocked +
+            ". So there is no safe sequence and the system is <b>unsafe</b>.</div>"
+          );
+        }
+
+        function showSolution() {
+          state.submitted = true;
+          state.revealed = true;
+
+          var run = greedy(state.procs, state.available);
+          el.solSeq.innerHTML =
+            '<div class="sol-head ' +
+            (run.safe ? "sol-good" : "sol-bad") +
+            '">' +
+            (run.safe
+              ? "Safe sequence"
+              : "No safe sequence &mdash; unsafe state") +
+            "</div>" +
+            (run.safe ? seqSolutionHTML(run) : unsafeSolutionHTML(run));
+          el.solSeq.hidden = false;
+
+          grade();
+        }
+
+        function hideSolution() {
+          el.solSeq.hidden = true;
+          el.solSeq.innerHTML = "";
+        }
+
+        /* ---------------- actions ---------------- */
+
+        function grade() {
+          var res = evaluate();
+          applyMarks(res);
+          renderScore(res);
+        }
+
+        function submit() {
+          state.submitted = true;
+          grade();
+        }
+
+        function clearMarks() {
+          el.seqTable.querySelectorAll(".ans").forEach(function (n) {
+            n.classList.remove("ok", "bad");
+          });
+          el.seqTable.querySelectorAll(".sol").forEach(function (n) {
+            n.textContent = "";
+            n.hidden = true;
+          });
+          el.score.innerHTML = "";
+        }
+
+        function retry() {
+          state.submitted = false;
+          state.revealed = false;
+          clearMarks();
+          hideSolution();
+        }
+
+        function blankVec() {
+          var row = [];
+          for (var r = 0; r < state.m; r++) row.push("");
+          return row;
+        }
+
+        function resetEntries() {
+          state.need = {};
+          state.avail = {};
+          state.procs.forEach(function (p) {
+            state.need[p.pid] = blankVec();
+            state.avail[p.pid] = blankVec();
+          });
+
+          state.order = [];
+          for (var i = 0; i < state.procs.length; i++) state.order.push("");
+
+          state.verdict = false;
+          state.submitted = false;
+          state.revealed = false;
+        }
+
+        function renderAll() {
+          renderChips();
+          renderGiven();
+          renderTable();
+          renderOrder();
+          hideSolution();
+          clearMarks();
+          state.submitted = false;
+          state.revealed = false;
+          el.score.innerHTML = "";
+        }
+
+        function newProblem() {
+          var kind =
+            state.kind === "random"
+              ? Math.random() < 0.5
+                ? "safe"
+                : "unsafe"
+              : state.kind;
+          var d =
+            kind === "safe"
+              ? genSafe(state.n, state.m)
+              : genUnsafe(state.n, state.m);
+
+          state.procs = d.procs;
+          state.available = d.available;
+          state.total = d.total;
+          state.unsafe = !greedy(d.procs, d.available).safe;
+
+          resetEntries();
+          renderAll();
+        }
+
+        function changeKind(kind) {
+          if (kind === state.kind) return;
+          state.kind = kind;
+          newProblem();
+        }
+
+        function changeN(n) {
+          if (n === state.n) return;
+          state.n = n;
+          newProblem();
+        }
+
+        function changeM(m) {
+          if (m === state.m) return;
+          state.m = m;
+          newProblem();
+        }
+
+        function changeData(mode) {
+          if (mode === state.given) return;
+          state.given = mode;
+          renderGiven();
+          renderChips();
+        }
+
+        /* ---------------- wiring ---------------- */
+
+        function focusCell(selector) {
+          var inp = el.seqTable.querySelector(selector);
+          if (inp) inp.focus();
+        }
+
+        function bind() {
+          el = {
+            kindChips: $("kindChips"),
+            nChips: $("nChips"),
+            mChips: $("mChips"),
+            dataChips: $("dataChips"),
+            newBtn: $("newBtn"),
+            dataNote: $("dataNote"),
+            availStrip: $("availStrip"),
+            seqTable: $("seqTable"),
+            orderSlots: $("orderSlots"),
+            seqLive: $("seqLive"),
+            verdictBtn: $("verdictBtn"),
+            solSeq: $("solSeq"),
+            score: $("score"),
+            submitBtn: $("submitBtn"),
+            retryBtn: $("retryBtn"),
+            revealBtn: $("revealBtn"),
+          };
+
+          el.kindChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-kind]");
+            if (b) changeKind(b.dataset.kind);
+          });
+
+          el.nChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-n]");
+            if (b) changeN(parseInt(b.dataset.n, 10));
+          });
+
+          el.mChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-m]");
+            if (b) changeM(parseInt(b.dataset.m, 10));
+          });
+
+          el.dataChips.addEventListener("click", function (e) {
+            var b = e.target.closest("[data-data]");
+            if (b) changeData(b.dataset.data);
+          });
+
+          el.newBtn.addEventListener("click", newProblem);
+          el.submitBtn.addEventListener("click", submit);
+          el.retryBtn.addEventListener("click", retry);
+          el.revealBtn.addEventListener("click", showSolution);
+
+          el.verdictBtn.addEventListener("click", function () {
+            state.verdict = !state.verdict;
+            updateOrderStatus();
+            if (state.submitted) grade();
+          });
+
+          el.seqTable.addEventListener("input", function (e) {
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            inp.value = inp.value.replace(/\D/g, "").slice(0, 2);
+            var r = parseInt(inp.dataset.r, 10);
+
+            if (inp.classList.contains("needin")) {
+              state.need[inp.dataset.pid][r] = inp.value;
+            } else {
+              state.avail[inp.dataset.pid][r] = inp.value;
+            }
+
+            updateOrderStatus();
+            if (state.submitted) grade();
+          });
+
+          el.seqTable.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            e.preventDefault();
+
+            var pool = Array.prototype.slice.call(
+              el.seqTable.querySelectorAll(
+                inp.classList.contains("needin") ? ".needin" : ".avail",
+              ),
+            );
+            var idx = pool.indexOf(inp);
+
+            if (idx >= 0 && idx < pool.length - 1) {
+              pool[idx + 1].focus();
+            } else if (inp.classList.contains("needin")) {
+              var first = el.orderSlots.querySelector(".ord");
+              if (first) first.focus();
+            } else {
+              submit();
+            }
+          });
+
+          el.orderSlots.addEventListener("input", function (e) {
+            var inp = e.target.closest(".ord");
+            if (!inp) return;
+
+            var v = inp.value
+              .toUpperCase()
+              .replace(/[^0-9P]/g, "")
+              .slice(0, 3);
+            if (/^\d+$/.test(v)) v = "P" + v;
+            inp.value = v;
+            state.order[parseInt(inp.dataset.i, 10)] = v;
+            state.verdict = false;
+            updateOrderStatus();
+            if (state.submitted) grade();
+          });
+
+          el.orderSlots.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            var inp = e.target.closest(".ord");
+            if (!inp) return;
+            e.preventDefault();
+
+            var all = Array.prototype.slice.call(
+              el.orderSlots.querySelectorAll(".ord"),
+            );
+            var idx = all.indexOf(inp);
+
+            if (idx >= 0 && idx < all.length - 1) {
+              all[idx + 1].focus();
+              return;
+            }
+
+            var run = computeRun();
+            var first = "";
+            for (var i = 0; i < run.slots.length; i++) {
+              if (run.slots[i].status === "ok") {
+                first = run.slots[i].pid;
+                break;
+              }
+            }
+            if (first)
+              focusCell('.avail[data-pid="' + first + '"][data-r="0"]');
+            else focusCell(".avail");
+          });
+
+          el.seqTable.addEventListener("focusin", function (e) {
+            var inp = e.target.closest(".ans");
+            if (!inp) return;
+            setTimeout(function () {
+              inp.select();
+            }, 0);
+          });
+
+          el.orderSlots.addEventListener("focusin", function (e) {
+            var inp = e.target.closest(".ord");
+            if (!inp) return;
+            setTimeout(function () {
+              inp.select();
+            }, 0);
+          });
+        }
+
+        bind();
+        newProblem();
+      })();
+    </script>
+  </body>
 </html>
