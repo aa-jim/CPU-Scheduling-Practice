@@ -1,4 +1,4 @@
-:root{
+﻿:root{
   --bg:#f1f5f9;
   --panel:#ffffff;
   --ink:#0f172a;
@@ -545,3 +545,129 @@ td.chk{font-size:15px;font-weight:800;line-height:1}
   .paging-table .t-in{width:34px;min-width:34px;padding:6px 1px}
   .ref-chip{min-width:30px;padding:3px 5px}
 }
+
+/* ---------- memory allocation ---------- */
+.controls.mem{grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:end}
+.controls.mem .mem-actions{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.controls.mem .mem-actions .btn{width:100%}
+.mem-given{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:start}
+.mem-given .mini-label{margin-bottom:6px}
+.mem-table{max-width:360px}
+.mem-alloc{min-width:420px}
+.mem-alloc th,.mem-alloc td{white-space:nowrap}
+.mem-alloc .mem-alloc-cell{padding:4px 6px 3px;vertical-align:top}
+.mem-alloc .mem-alloc-in{width:90px;min-width:70px;text-transform:uppercase}
+.mem-alloc .mem-alloc-cell .sol{display:block;margin-top:2px;font-size:11px;font-weight:700;color:var(--good);min-height:14px}
+.mem-alloc .mem-alloc-cell .sol[hidden]{display:none}
+.mem-totals .total-field{min-width:240px}
+.mem-alloc.solution td b{font-weight:800}
+.mem-alloc.solution tr.mem-placed td:nth-child(3){color:var(--accent)}
+.mem-alloc.solution tr.mem-free td{color:var(--muted)}
+.mem-explain{margin-top:12px}
+.mem-steps{margin:0;padding-left:22px;font-size:13.5px;color:#334155}
+.mem-steps li{margin:6px 0;line-height:1.45}
+.mem-custom-form .custom-field{flex:1 1 260px}
+@media (max-width:760px){
+  .controls.mem{grid-template-columns:1fr 1fr}
+  .controls.mem .mem-actions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+  .controls.mem .mem-actions .btn{width:auto;flex:1}
+  .mem-alloc{min-width:0;width:100%}
+  .mem-alloc .mem-alloc-in{width:72px}
+}
+
+/* memory allocation - all strategies layout */
+.controls.mem{grid-template-columns:1fr 1fr auto}
+.mem-strategies{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.mem-strat .panel-head{flex-direction:column;align-items:flex-start;gap:6px}
+.mem-strat .panel-head h2{margin:0}
+.mem-strat .note{max-width:none;font-size:12.5px}
+.mem-frag-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}
+.mem-frag-row .total-field{flex:1 1 180px;min-width:180px}
+.mem-frag-row .total-field .total-in{width:100%;max-width:180px}
+.mem-compare{min-width:100%}
+.mem-compare th,.mem-compare td{text-align:center;vertical-align:middle;padding:8px 8px}
+.mem-compare th .muted{font-size:11px;font-weight:600;text-transform:none;letter-spacing:0}
+.mem-cell-placed{background:#eef2ff}
+.mem-cell-placed b{color:var(--accent)}
+.mem-cell-free{color:#94a3b8}
+.mem-compare .small{font-size:11px;margin-top:2px}
+.mem-why{margin-top:10px}
+.mem-why summary .pill{margin-left:6px;font-size:11px;padding:2px 8px}
+@media (max-width:900px){
+  .mem-strategies{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .controls.mem{grid-template-columns:1fr 1fr}
+  .controls.mem .mem-actions{grid-column:1/-1}
+  .mem-frag-row .total-field{min-width:140px}
+}
+@media (max-width:620px){
+  .controls.mem{grid-template-columns:1fr}
+  .controls.mem .mem-actions{grid-column:auto}
+}
+
+/* memory allocation - per-block internal fragmentation in job cell */
+.mem-alloc th:nth-child(3), .mem-alloc td.mem-alloc-cell{min-width:170px}
+.mem-dual{display:inline-flex;gap:6px;align-items:flex-start;justify-content:center;flex-wrap:nowrap}
+.mem-alloc .mem-job-in{width:62px;min-width:52px}
+.mem-alloc .mem-bfrag-in{width:56px;min-width:46px}
+.mem-alloc-cell .sol{white-space:normal;line-height:1.25}
+@media (max-width:620px){
+  .mem-alloc th:nth-child(3), .mem-alloc td.mem-alloc-cell{min-width:150px}
+  .mem-alloc .mem-job-in{width:54px;min-width:46px}
+  .mem-alloc .mem-bfrag-in{width:48px;min-width:40px}
+}
+
+/* memory allocation - compact fit (no horizontal scroll in strategy panels) */
+.mem-strategies{gap:12px}
+.mem-strat{padding:12px}
+.mem-strat .mem-alloc{min-width:0;width:100%;font-size:13px}
+.mem-strat .mem-alloc th,.mem-strat .mem-alloc td{padding:5px 4px;white-space:nowrap}
+.mem-strat .mem-alloc thead th{font-size:11px;line-height:1.2}
+.mem-strat .mem-alloc th:nth-child(3){white-space:normal;min-width:0;width:1%}
+.mem-strat .mem-alloc td.mem-alloc-cell{min-width:0;padding:3px 3px 2px}
+.mem-strat .mem-dual{gap:4px}
+.mem-strat .mem-alloc .mem-job-in{width:44px;min-width:40px;padding:5px 2px;font-size:13px}
+.mem-strat .mem-alloc .mem-bfrag-in{width:40px;min-width:36px;padding:5px 2px;font-size:13px}
+.mem-strat .mem-frag-row{gap:10px;margin-top:10px}
+.mem-strat .mem-frag-row .total-field{flex:1 1 140px;min-width:0;font-size:12.5px}
+.mem-strat .mem-frag-row .total-field .total-in{max-width:none;width:100%;padding:7px 8px;font-size:13.5px}
+.mem-strat .table-wrap{overflow-x:visible}
+@media (max-width:900px){
+  .mem-strat .mem-alloc th:nth-child(3){white-space:nowrap}
+  .mem-strat .mem-alloc .mem-job-in{width:54px;min-width:46px}
+  .mem-strat .mem-alloc .mem-bfrag-in{width:48px;min-width:40px}
+}
+
+/* ---------- home / landing ---------- */
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.home-card{
+  display:block;text-decoration:none;color:inherit;
+  border:1px solid var(--line);border-radius:12px;padding:18px 18px 16px;background:#fff;
+  position:relative;
+  transition:border-color .12s, box-shadow .12s, transform .12s;
+}
+.home-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;border-radius:12px 12px 0 0;opacity:0;transition:opacity .12s,background .12s;
+}
+.home-card:hover::before{opacity:1}
+.home-card:hover{border-color:#c7d2fe;box-shadow:0 6px 16px rgba(79,70,229,.10);transform:translateY(-2px)}
+.home-card:nth-child(1){border-left-color:#6366f1}
+.home-card:nth-child(1)::before{background:#6366f1}
+.home-card:nth-child(2){border-left-color:#0d9488}
+.home-card:nth-child(2)::before{background:#0d9488}
+.home-card:nth-child(3){border-left-color:#d97706}
+.home-card:nth-child(3)::before{background:#d97706}
+.home-card:nth-child(4){border-left-color:#db2777}
+.home-card:nth-child(4)::before{background:#db2777}
+.home-card:hover{border-color:#c7d2fe;box-shadow:0 6px 16px rgba(79,70,229,.10);transform:translateY(-2px)}
+.home-card h3{margin:0 0 8px;font-size:17px;color:var(--ink)}
+.home-card p{margin:0;font-size:14px;color:var(--muted);line-height:1.55}
+
+.home{max-width:860px;margin:0 auto;padding:40px 16px}
+.home-header{margin-bottom:32px}
+.home-header h1{margin:0 0 8px;font-size:28px;letter-spacing:-.02em;color:var(--ink)}
+.home-sub{margin:0;color:var(--muted);font-size:16px;line-height:1.5}
+.home-section{margin-bottom:24px}
+.home-section-title{margin:0 0 14px;font-size:15px;font-weight:700;color:var(--ink);letter-spacing:.04em;text-transform:uppercase}
+

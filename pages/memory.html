@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Memory Allocation Practice</title>
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<div class="wrap wide">
+  <header>
+        <nav class="nav" aria-label="Practice pages">
+      <a href="../index.html">Home</a>
+      <a href="cpu-scheduling.html">CPU Scheduling</a>
+      <a href="bankers.html">Banker&rsquo;s Algorithm</a>
+      <a href="paging.html">Page Replacement</a>
+      <a href="memory.html" class="on" aria-current="page">Memory Allocation</a>
+      <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+    </nav>
+    <h1>Dynamic Storage Allocation Practice</h1>
+    <p>Place each job into a memory block using all four strategies (First-fit, Best-fit, Next-fit, Worst-fit), then calculate internal and external fragmentation for each. Sizes are in KB.</p>
+  </header>
+
+  <section class="panel controls mem">
+    <div class="group">
+      <div class="glabel">Jobs</div>
+      <div class="chips" id="jobChips"></div>
+    </div>
+    <div class="group">
+      <div class="glabel">Blocks</div>
+      <div class="chips" id="blockChips"></div>
+    </div>
+    <div class="group mem-actions">
+      <button class="btn" id="newBtn" type="button">&#8635; New problem</button>
+      <button class="btn" id="exampleBtn" type="button">Load the example</button>
+      <button class="btn ghost" id="customToggle" type="button">Enter your own</button>
+    </div>
+  </section>
+
+  <section class="panel custom-panel" id="customPanel" hidden>
+    <div class="panel-head">
+      <h2>Custom problem</h2>
+      <span class="hint">Enter one item per line or comma/space separated as <b>Name:Size</b> (e.g. <code>A:44</code>). Jobs 1&ndash;10, blocks 1&ndash;10, sizes 1&ndash;999 KB.</span>
+    </div>
+    <div class="custom-form mem-custom-form">
+      <label class="custom-field">Jobs (in order)
+        <textarea id="customJobs" rows="4" spellcheck="false" placeholder="A:44&#10;B:20&#10;C:70&#10;D:30"></textarea>
+      </label>
+      <label class="custom-field">Memory blocks (in order)
+        <textarea id="customBlocks" rows="4" spellcheck="false" placeholder="1:60&#10;2:70&#10;3:80&#10;4:20&#10;5:40"></textarea>
+      </label>
+      <div class="custom-buttons">
+        <button class="btn primary" id="customApply" type="button">Use this problem</button>
+        <button class="btn" id="customCancel" type="button">Cancel</button>
+      </div>
+    </div>
+    <div class="custom-msg" id="customMsg" aria-live="polite"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Given data</h2>
+      <span class="hint">Use the same job list and memory block list for all four strategies. Jobs are allocated in the given order; each block can hold at most one job.</span>
+    </div>
+    <div class="mem-given">
+      <div class="table-wrap">
+        <div class="mini-label">Job list (in order)</div>
+        <table class="given mem-table" id="jobTable"></table>
+      </div>
+      <div class="table-wrap">
+        <div class="mini-label">Memory block list</div>
+        <table class="given mem-table" id="blockTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <div class="mem-strategies" id="strategies"></div>
+
+  <section class="panel sol-block" id="solutionPanel" hidden>
+    <div class="sol-head sol-good">Comparison</div>
+    <div id="solSummary"></div>
+  </section>
+</div>
+
+<footer class="actions">
+  <div class="actions-inner">
+    <div class="score" id="score" aria-live="polite"></div>
+    <div class="btns">
+      <button class="btn primary" id="submitBtn" type="button">Submit</button>
+      <button class="btn" id="retryBtn" type="button">Try again</button>
+      <button class="btn" id="revealBtn" type="button">Show answer</button>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/memory.js"></script>
+</body>
+</html>

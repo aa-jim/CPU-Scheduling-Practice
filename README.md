@@ -1,17 +1,21 @@
-# CPU Scheduling, Banker&rsquo;s Algorithm &amp; Page Replacement Practice
+# CPU Scheduling, Banker&rsquo;s, Page Replacement &amp; Memory Allocation Practice
 
-Four small, dependency-free practice pages for operating-systems exercises:
+Five small, dependency-free practice pages for operating-systems exercises:
 
-- **`index.html`** &mdash; CPU scheduling: build the Gantt chart, fill in the metrics
-  table, and get graded instantly.
-- **`bankers.html`** &mdash; Banker&rsquo;s algorithm: compute each process&rsquo;s current need,
-  carry the available vector forward, and find a safe sequence (or show that the
-  state is unsafe).
-- **`deadlock.html`** &mdash; resource allocation and wait-for graphs: type the
-  allocation and request matrices, then hand-draw both graphs and get each arrow
-  marked, plus the deadlock verdict.
-- **`paging.html`** &mdash; page replacement: trace page frames through a reference string
-  for FIFO, Optimal and LRU, mark faults and hits, and compute the hit ratio.
+- **CPU Scheduling** (`pages/cpu-scheduling.html`) &mdash; build the Gantt chart, fill in the
+  metrics table, and get graded instantly.
+- **Banker&rsquo;s Algorithm** (`pages/bankers.html`) &mdash; compute each process&rsquo;s
+  current need, carry the available vector forward, and find a safe sequence (or show that
+  the state is unsafe).
+- **Deadlock Graphs** (`pages/deadlock.html`) &mdash; resource allocation and wait-for
+  graphs: type the allocation and request matrices, then hand-draw both graphs and get each
+  arrow marked, plus the deadlock verdict (kept in the project but not linked from the
+  navigation).
+- **Page Replacement** (`pages/paging.html`) &mdash; trace page frames through a reference
+  string for FIFO, Optimal and LRU, mark faults and hits, and compute the hit ratio.
+- **Memory Allocation** (`pages/memory.html`) &mdash; dynamic storage allocation: place jobs
+  into memory blocks using First-fit, Best-fit, Next-fit and Worst-fit (all four side by
+  side), then compute per-block and total internal/external fragmentation.
 
 ## Features
 
@@ -114,15 +118,41 @@ Four small, dependency-free practice pages for operating-systems exercises:
 - **Keyboard friendly** &mdash; `Enter` moves down a column (Frame 1 &rarr; &hellip; &rarr;
   Result) then to the next column, and submits from the last field.
 
-All four pages need **no build step and no dependencies** &mdash; just an HTML file and
+### Memory allocation page
+
+- **Four algorithms on one page** &mdash; First-fit, Best-fit, Next-fit and Worst-fit, each
+  shown as its own section so you solve all four for the same problem.
+- **Configurable problems** &mdash; 3&ndash;6 jobs and 4&ndash;7 memory blocks, plus
+  **New problem**, **Load the example**, and **Enter your own** (jobs and blocks as
+  `Name:Size`, 1&ndash;10 each, sizes 1&ndash;999 KB).
+- **Given data** &mdash; a single job list (in allocation order) and memory block list,
+  shared by all four strategies.
+- **Per-strategy allocation grid** &mdash; for every memory block in each strategy, type the
+  job name placed in it and that block&rsquo;s **internal fragmentation** side by side in the
+  same cell (leave both blank/`&ndash;` if the block stays unallocated). Jobs are considered
+  in list order and each block can hold at most one job.
+- **Per-strategy totals** &mdash; each strategy has its own **total internal fragmentation**
+  and **external fragmentation** inputs (KB), shown side by side below the table, both
+  graded.
+- **Instant grading** &mdash; wrong block assignments and totals turn red, correct ones
+  green, with score pills per strategy and an overall percentage.
+- **Show answer** reveals the correct placements and fragmentation for all four strategies
+  in a comparison table, plus per-job placement steps (including any unplaced jobs).
+- **Keyboard friendly** &mdash; `Enter` / arrows move through a strategy&rsquo;s block
+  inputs, into its internal/external fields, then on to the next strategy.
+
+All five pages need **no build step and no dependencies** &mdash; just an HTML file and
 the shared stylesheet.
 
 ## How to use
 
 1. Download or clone the repository.
-2. Open `index.html`, `bankers.html`, `deadlock.html`, or `paging.html` in any modern
-   browser — double-clicking it is enough, there is no server or build step. The
-   pill-shaped navigation at the top switches between the four pages.
+2. Open `index.html` in any modern browser for the home page, or open a practice page
+   directly from the `pages/` folder (e.g. `pages/cpu-scheduling.html`,
+   `pages/bankers.html`, `pages/paging.html`, `pages/memory.html`) &mdash; double-clicking
+   is enough, there is no server or build step. The navigation bar switches between Home and
+   the available practice pages (`pages/deadlock.html` remains in the project but is not
+   linked in the navigation).
 
 ### CPU scheduling
 
@@ -194,6 +224,22 @@ the shared stylesheet.
 5. To compare algorithms, switch FIFO/Optimal/LRU (or the frame count) on the same
    string; changing the reference length or pressing *New problem* generates a new string.
 
+### Memory allocation
+
+1. Choose the number of **jobs** and **memory blocks**, or press **New problem** for fresh
+   data. **Load the example** loads a sample job/block list; **Enter your own** lets you
+   provide jobs and blocks as `Name:Size` pairs (e.g. `A:44`), 1&ndash;10 items each.
+2. For **each strategy** (First-fit, Best-fit, Next-fit, Worst-fit), type the job placed in
+   every memory block and that block&rsquo;s **internal fragmentation** side by side in the
+   same cell (leave both blank/`&ndash;` if unallocated). Jobs are considered in the given
+   order.
+3. For **each strategy**, enter the **total internal fragmentation** and **external
+   fragmentation** in KB (side by side below the table).
+4. Press **Submit** to grade all four strategies at once. **Try again** clears the marks
+   but keeps your work, and **Show answer** reveals the correct placements, fragmentation
+   totals and a comparison of all four strategies. Changing the job/block counts or
+   pressing *New problem* generates a new problem.
+
 Notes:
 
 - Changing the algorithm on the scheduling page keeps the same process set and re-solves
@@ -214,6 +260,11 @@ Notes:
   two totals. Switching the algorithm or frame count keeps the same reference string;
   changing the length or pressing *New problem* draws a new one. A custom string replaces
   the current problem and clears your answers.
+- On the memory allocation page, all four strategies are solved on the same jobs and blocks.
+  The score counts every block&rsquo;s job and per-block internal fragmentation, plus both
+  fragmentation totals for each strategy. Changing the job/block counts or pressing *New
+  problem* draws a new one; a custom problem replaces the current data and clears your
+  answers.
 
 ## CPU scheduling rules used
 
@@ -260,6 +311,13 @@ time.
 | Hits | `references − page faults` |
 | Hit ratio | `hits / references` |
 | Fault rate | `page faults / references` |
+
+### Memory allocation
+
+| Value | Formula |
+| --- | --- |
+| Internal fragmentation | `Σ (allocated block size − job size)` over all allocated blocks |
+| External fragmentation | sum of sizes of blocks left unallocated (free memory) |
 
 ## Banker&rsquo;s algorithm rules used
 
@@ -308,21 +366,47 @@ time.
   include at least one hit and one eviction for all three algorithms (relaxed for very
   short strings). Custom strings accept 2&ndash;30 page numbers from 1&ndash;99.
 
+## Memory allocation rules used
+
+- Jobs are allocated in the given order; each memory block can hold at most one job in
+  these exercises.
+- **First-fit:** place the job in the first block (from the start of the list) that is
+  large enough.
+- **Best-fit:** place the job in the smallest block that is large enough (tightest fit).
+- **Next-fit:** like first-fit, but the search resumes from where the last allocation was
+  made and wraps around to the beginning if needed.
+- **Worst-fit:** place the job in the largest block that is large enough.
+- If no block can fit a job, it remains unplaced. **Internal fragmentation** is the unused
+  space inside allocated blocks (`block size − job size`), and **external fragmentation** is
+  the total size of blocks left unallocated.
+
 ## Project structure
 
 ```
-index.html    scheduling page: markup, styles reference, all logic
-bankers.html  Banker's algorithm page: markup and all logic
-deadlock.html deadlock graphs page: markup, SVG drawing, all logic
-paging.html   page replacement page: markup and all logic
-style.css     layout and component styling for all pages
-README.md     this file
+index.html              home/landing page
+css/
+  style.css             shared layout and component styling
+js/
+  cpu-scheduling.js     CPU scheduling logic
+  bankers.js            Banker's algorithm logic
+  deadlock.js           deadlock graphs logic
+  paging.js             page replacement logic
+  memory.js             memory allocation logic
+pages/
+  cpu-scheduling.html   CPU scheduling practice page
+  bankers.html          Banker's algorithm practice page
+  deadlock.html         deadlock graphs practice page (not linked in navigation)
+  paging.html           page replacement practice page
+  memory.html           memory allocation practice page
+README.md               this file
 ```
 
-Each page is self-contained and dependency-free. The pure logic in each file sits
-between `/* PURE-START */` and `/* PURE-END */` markers (`generateProcs` / `simulate`
-for scheduling, the vector helpers and problem generators for Banker&rsquo;s,
-`analyse` / `findCycle` / `expectedRAG` / `expectedWFG` / `compareEdges` for the
-deadlock page, and `simulate` / `generateProblem` / `parseCustomRefs` for page
-replacement), so it can be extracted and tested without a DOM.
+Each page is dependency-free (no build step). Page markup lives in `pages/*.html` (and
+`index.html` for home), with shared styles in `css/style.css` and per-page scripts in
+`js/*.js`. The pure logic in each script sits between `/* PURE-START */` and
+`/* PURE-END */` markers (`generateProcs` / `simulate` for scheduling, the vector helpers
+and problem generators for Banker&rsquo;s, `analyse` / `findCycle` / `expectedRAG` /
+`expectedWFG` / `compareEdges` for deadlock, `simulate` / `generateProblem` /
+`parseCustomRefs` for page replacement, and `allocate` / `solveAll` / `generateProblem` /
+`parseCustom` for memory allocation), so it can be extracted and tested without a DOM.
 

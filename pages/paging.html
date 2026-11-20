@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Replacement Practice</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="wrap wide">
+      <header>
+            <nav class="nav" aria-label="Practice pages">
+      <a href="../index.html">Home</a>
+      <a href="cpu-scheduling.html">CPU Scheduling</a>
+      <a href="bankers.html">Banker&rsquo;s Algorithm</a>
+      <a href="paging.html" class="on" aria-current="page">Page Replacement</a>
+      <a href="memory.html">Memory Allocation</a>
+      <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+    </nav>
+        <h1>Page Replacement Practice</h1>
+        <p>
+          Pick an algorithm, trace the page frames through the reference string,
+          then enter the fault/hit results and totals. All steps are graded.
+        </p>
+      </header>
+
+      <section class="panel controls paging">
+        <div class="group">
+          <div class="glabel">Algorithm</div>
+          <div class="chips" id="algoChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Frames</div>
+          <div class="chips" id="frameChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">References</div>
+          <div class="chips" id="lenChips"></div>
+        </div>
+        <div class="group paging-actions">
+          <button class="btn" id="newBtn" type="button">
+            &#8635; New problem
+          </button>
+          <button class="btn" id="exampleBtn" type="button">
+            Load the example
+          </button>
+          <button class="btn ghost" id="customToggle" type="button">
+            Enter your own
+          </button>
+        </div>
+      </section>
+
+      <section class="panel custom-panel" id="customPanel" hidden>
+        <div class="panel-head">
+          <h2>Custom reference string</h2>
+          <span class="hint"
+            >Use commas or spaces. 2&ndash;30 page numbers from 1&ndash;99.
+            Frames: 1&ndash;10.</span
+          >
+        </div>
+        <div class="custom-form">
+          <label class="custom-field"
+            >Reference string
+            <textarea
+              id="customRefs"
+              rows="2"
+              spellcheck="false"
+              placeholder="e.g. 1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5"
+            ></textarea>
+          </label>
+          <label class="custom-field small"
+            >Frames
+            <input
+              id="customFrames"
+              type="text"
+              inputmode="numeric"
+              value="3"
+              maxlength="2"
+            />
+          </label>
+          <div class="custom-buttons">
+            <button class="btn primary" id="customApply" type="button">
+              Use this problem
+            </button>
+            <button class="btn" id="customCancel" type="button">Cancel</button>
+          </div>
+        </div>
+        <div class="custom-msg" id="customMsg" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Given data</h2>
+          <span class="note" id="ruleNote"></span>
+        </div>
+        <p class="given-text" id="givenText"></p>
+        <div class="ref-strip-wrap">
+          <div class="mini-label">Reference string</div>
+          <div class="ref-strip" id="refStrip"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 1</span> Trace table</h2>
+          <span class="hint"
+            >Fill every frame after each reference. Use a blank or
+            <b>&ndash;</b> for an empty frame. In <b>Result</b> enter
+            <b>F</b> (page fault) or <b>H</b> (hit).</span
+          >
+        </div>
+        <div class="table-wrap paging-wrap">
+          <table class="paging-table" id="traceTable"></table>
+        </div>
+        <div class="legend paging-legend">
+          <span class="key"><b>F</b> = page fault</span
+          ><span class="key"><b>H</b> = hit</span
+          ><span class="key"
+            >Leave a cell blank or type <b>&ndash;</b> if the frame is
+            empty</span
+          >
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 2</span> Results</h2>
+          <span class="hint" id="totalHint"
+            >Hit ratio = hits &divide; references. You may enter a percentage
+            (e.g. 16.7) or a fraction (e.g. 2/12).</span
+          >
+        </div>
+        <div class="totals-grid">
+          <label class="total-field"
+            >Total page faults
+            <input
+              class="ans total-in"
+              id="faultsIn"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="3"
+              aria-label="Total page faults"
+            />
+            <span class="sol" id="faultsSol" hidden></span>
+          </label>
+          <label class="total-field"
+            >Hit ratio
+            <input
+              class="ans total-in"
+              id="ratioIn"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="8"
+              aria-label="Hit ratio"
+            />
+            <span class="sol" id="ratioSol" hidden></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel sol-block" id="solutionPanel" hidden>
+        <div class="sol-head sol-good" id="solHead">Correct solution</div>
+        <div id="solCompare" class="sol-compare"></div>
+        <div class="table-wrap paging-wrap">
+          <table class="paging-table solution" id="solTable"></table>
+        </div>
+        <div class="sol-totals" id="solTotals"></div>
+        <details class="why">
+          <summary>Why each page was replaced</summary>
+          <ol id="whyList" class="why-list"></ol>
+        </details>
+      </section>
+    </div>
+
+    <footer class="actions">
+      <div class="actions-inner">
+        <div class="score" id="score" aria-live="polite"></div>
+        <div class="btns">
+          <button class="btn primary" id="submitBtn" type="button">
+            Submit
+          </button>
+          <button class="btn" id="retryBtn" type="button">Try again</button>
+          <button class="btn" id="revealBtn" type="button">Show answer</button>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../js/paging.js"></script>
+</body>
+</html>

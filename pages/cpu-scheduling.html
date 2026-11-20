@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CPU Scheduling Practice</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+            <nav class="nav" aria-label="Practice pages">
+      <a href="../index.html">Home</a>
+      <a href="cpu-scheduling.html" class="on" aria-current="page">CPU Scheduling</a>
+      <a href="bankers.html">Banker&rsquo;s Algorithm</a>
+      <a href="paging.html">Page Replacement</a>
+      <a href="memory.html">Memory Allocation</a>
+      <!--<a href="deadlock.html">Deadlock Graphs</a>-->
+    </nav>
+        <h1>CPU Scheduling Practice</h1>
+        <p>
+          Pick an algorithm, complete the Gantt chart, then fill in the table.
+          All times are in ms.
+        </p>
+      </header>
+
+      <section class="panel controls">
+        <div class="group">
+          <div class="glabel">Algorithm</div>
+          <div class="chips" id="algoChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Processes</div>
+          <div class="chips" id="nChips"></div>
+        </div>
+        <div class="group">
+          <div class="glabel">Arrival times</div>
+          <div class="chips" id="arrChips"></div>
+        </div>
+        <div class="group">
+          <button class="btn" id="newBtn">&#8635; New problem</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Given data</h2>
+          <span class="note" id="ruleNote"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="given" id="givenTable"></table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 1</span> Gantt chart</h2>
+          <span class="hint" id="ganttTopHint"
+            >Type the time each block ends at &mdash; one block per stretch of
+            CPU time, including <b>IDLE</b> gaps.</span
+          >
+        </div>
+        <div id="solGantt" class="sol-gantt" hidden></div>
+        <div class="rq-panel" id="rqPanel" hidden>
+          <div class="rq-head">
+            <div class="mini-label">
+              Ready queue <span class="rq-q" id="rqQ"></span>
+            </div>
+            <span class="hint"
+              >live as you type &middot; front of the queue is outlined</span
+            >
+          </div>
+          <div class="rq-strip" id="rqStrip"></div>
+        </div>
+        <div class="gantt-holder">
+          <div class="mini-label">Your chart</div>
+          <div id="ganttPreview"></div>
+        </div>
+        <div class="gtrack-edit" id="ganttEditor"></div>
+        <div
+          style="
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+          "
+        >
+          <button class="btn ghost" id="addBtn">+ Add block</button>
+          <span class="hint" id="ganttHint"></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2><span class="step">Step 2</span> Answer table</h2>
+          <span class="hint" id="formulaHint"
+            >TAT = CT &minus; AT &nbsp;&middot;&nbsp; WT = TAT &minus; BT
+            &nbsp;&middot;&nbsp; RT = first CPU time &minus; AT</span
+          >
+        </div>
+        <div class="table-wrap"><table id="answerTable"></table></div>
+      </section>
+    </div>
+
+    <footer class="actions">
+      <div class="actions-inner">
+        <div class="score" id="score" aria-live="polite"></div>
+        <div class="btns">
+          <button class="btn primary" id="submitBtn">Submit</button>
+          <button class="btn" id="retryBtn">Try again</button>
+          <button class="btn" id="revealBtn">Show answer</button>
+        </div>
+      </div>
+    </footer>
+    <script src="../js/cpu-scheduling.js"></script>
+</body>
+</html>
